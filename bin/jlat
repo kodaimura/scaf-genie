@@ -1,0 +1,62 @@
+#!/bin/bash
+
+if [ $# -eq 0 ]; then
+    echo "ERROR: jlat <appname> [-db {SQLite| PostgreSQL | MySQL}]"
+    exit 1
+fi
+
+APP_NAME=${1:-goatapp}
+shift
+
+DB="SQLite"
+
+while (( $# > 0 ))
+do
+  case $1 in
+    -db | --db | --db=*)
+      if [[ $1 =~ ^--db= ]]; then
+        DB=$2
+      elif [ -z $2 ]; then
+        echo "ERROR: jlat <appname> [-db {SQLite| PostgreSQL | MySQL}]"
+        exit 1
+      else
+        DB=$2
+        shift
+      fi
+  esac
+  shift
+done
+
+if [ $DB != "SQLite" ] && [ $DB != "PostgreSQL" ] && [ $DB != "MySQL" ]; then
+	echo "ERROR: jlat <appname> [-db {SQLite| PostgreSQL | MySQL}]"
+  exit 1
+fi
+
+CURRENT_DIR=$(pwd)
+TEMPLATE_DIR=$(cd $(dirname $0); cd ../template; pwd)
+
+mkdir "$CURRENT_DIR/$APP_NAME"_Tmp
+cd "$CURRENT_DIR/$APP_NAME"_Tmp
+
+cat <<EOF > Dockerfile
+FROM julia:1.11
+RUN julia -e "using Pkg; Pkg.add(\"Genie\")"
+WORKDIR /app
+EOF
+
+cat <<EOF > docker-compose.yml
+services:
+  genie:
+    build: .
+    volumes:
+      - .:/app
+    command: sh -c "julia -e 'using Genie; Genie.Generator.newapp_mvc(\"$APP_NAME\",autostart = false, dbadapter = :$DB)'"
+EOF
+
+docker compose build --no-cache
+docker compose up
+docker compose down
+
+mv $APP_NAME ../
+cd ../
+rm -rf "$APP_NAME"_Tmp
