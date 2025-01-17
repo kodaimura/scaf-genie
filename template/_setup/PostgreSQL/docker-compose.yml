@@ -17,7 +17,7 @@ services:
   db:
     image: postgres:16.1
     environment:
-      POSTGRES_DB: ev_location
+      POSTGRES_DB: jlat
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:

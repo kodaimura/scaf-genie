@@ -18,7 +18,7 @@ services:
     image: mysql:8.0.34
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: goat
+      MYSQL_DATABASE: Jlat
       TZ: Asia/Tokyo
     volumes:
       - ./my.ini:/etc/mysql/conf.d/my.cnf
