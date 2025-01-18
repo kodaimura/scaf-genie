@@ -38,6 +38,16 @@ TEMPLATE_DIR=$(cd $(dirname $0); cd ../template; pwd)
 docker run --rm -v $APP_DIR:/$APP_NAME julia:1.11 sh -c "julia -e 'using Pkg; Pkg.add(\"Genie\"); using Genie; Genie.Generator.newapp_mvc(\"$APP_NAME\", autostart = false, dbadapter = :$DB)'"
 
 cd $APP_DIR
+
+cat <<EOF >> .gitignore
+
+
+# Jlat customization
+data
+*.db
+*.sqlite3
+EOF
+
 rm -rf public
 rm -rf app
 
