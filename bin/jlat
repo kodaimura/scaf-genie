@@ -32,36 +32,12 @@ if [ $DB != "SQLite" ] && [ $DB != "PostgreSQL" ] && [ $DB != "MySQL" ]; then
   exit 1
 fi
 
-CURRENT_DIR=$(pwd)
+APP_DIR=$(pwd)/$APP_NAME
 TEMPLATE_DIR=$(cd $(dirname $0); cd ../template; pwd)
 
-mkdir "$CURRENT_DIR/$APP_NAME"_Tmp
-cd "$CURRENT_DIR/$APP_NAME"_Tmp
+docker run --rm -v $APP_DIR:/$APP_NAME julia:1.11 sh -c "julia -e 'using Pkg; Pkg.add(\"Genie\"); using Genie; Genie.Generator.newapp_mvc(\"$APP_NAME\", autostart = false, dbadapter = :$DB)'"
 
-cat <<EOF > Dockerfile
-FROM julia:1.11
-RUN julia -e "using Pkg; Pkg.add(\"Genie\")"
-WORKDIR /app
-EOF
-
-cat <<EOF > docker-compose.yml
-services:
-  genie:
-    build: .
-    volumes:
-      - .:/app
-    command: sh -c "julia -e 'using Genie; Genie.Generator.newapp_mvc(\"$APP_NAME\",autostart = false, dbadapter = :$DB)'"
-EOF
-
-docker compose build --no-cache
-docker compose up
-docker compose down
-
-mv $APP_NAME ../
-cd ../
-rm -rf "$APP_NAME"_Tmp
-
-cd $APP_NAME
+cd $APP_DIR
 rm -rf public
 rm -rf app
 
@@ -80,8 +56,29 @@ fi
 
 # Jlatを置換
 sed -i "" s/Jlat/$APP_NAME/g ./db/connection.yml
-sed -i "" s/goat/$APP_NAME/g docker-compose.yml
+sed -i "" s/Jlat/$APP_NAME/g ./docker-compose.yml
 
 for fpath in `find . -name "*.DS_Store"`
 do rm $fpath
 done
+
+docker compose down
+docker compose up -d
+until docker compose ps -q app | xargs docker inspect -f '{{.State.Running}}' | grep -q true; do
+  sleep 1
+done
+docker compose exec app julia -e 'using Pkg; Pkg.activate("."); Pkg.add("HTTP"); Pkg.add("JSON"); Pkg.add("Base64"); Pkg.add("SHA"); Pkg.add("Reexport")'
+if [ $DB = "SQLite" ]; then
+  docker compose exec app julia -e 'using Pkg; Pkg.activate("."); using SearchLight; using SearchLightSQLite; SearchLight.Configuration.load(); SearchLight.connect(); SearchLight.Migration.init(); SearchLight.Migration.all_up!!()'
+elif [ $DB = "PostgreSQL" ]; then
+  docker compose exec app julia -e 'using Pkg; Pkg.activate("."); using SearchLight; using SearchLightPostgreSQL; SearchLight.Configuration.load(); SearchLight.connect(); SearchLight.Migration.init(); SearchLight.Migration.all_up!!()'
+elif [ $DB = "MySQL" ]; then
+  docker compose exec app julia -e 'using Pkg; Pkg.activate("."); using SearchLight; using SearchLightMySQL; SearchLight.Configuration.load(); SearchLight.connect(); SearchLight.Migration.init(); SearchLight.Migration.all_up!!()'
+else
+  echo "Unsupported database: $DB"
+  exit 1
+fi
+
+docker compose down
+docker compose build --no-cache
+docker compose up

@@ -43,12 +43,16 @@ function login(account_name::String, account_password::String)::Account
 end
 
 function create_jwt(account::Account)::String
-    payload = Dict(
+    try
+        payload = Dict(
         "id" => account.id.value, 
         "account_name" => account.account_name, 
         "exp" => string(Dates.now() + Dates.Month(3))
     )
     return Jwt.create(payload)
+    catch e
+        handle_exception(e)
+    end
 end
 
 function hash_password(password::String)
