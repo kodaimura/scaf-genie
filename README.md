@@ -26,6 +26,6 @@ $ jlat <appname> [-db {SQLite| PostgreSQL | MySQL}]
 ### Dockerで起動
 * Dockerコンテナ & アプリ起動
 ```
-$ make dev
+$ make up
 ```
 http://localhost:8000
