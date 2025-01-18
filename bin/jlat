@@ -34,19 +34,11 @@ fi
 
 APP_DIR=$(pwd)/$APP_NAME
 TEMPLATE_DIR=$(cd $(dirname $0); cd ../template; pwd)
+TEMPLATE_SUB_DIR=$(cd $(dirname $0); cd ../template_sub; pwd)
 
 docker run --rm -v $APP_DIR:/$APP_NAME julia:1.11 sh -c "julia -e 'using Pkg; Pkg.add(\"Genie\"); using Genie; Genie.Generator.newapp_mvc(\"$APP_NAME\", autostart = false, dbadapter = :$DB)'"
 
 cd $APP_DIR
-
-cat <<EOF >> .gitignore
-
-
-# Jlat customization
-data
-*.db
-*.sqlite3
-EOF
 
 rm -rf public
 rm -rf app
@@ -58,7 +50,7 @@ cp -r $TEMPLATE_DIR/docker-compose.prod.yml .
 cp -r $TEMPLATE_DIR/docker-compose.yml .
 cp -r $TEMPLATE_DIR/Dockerfile .
 cp -r $TEMPLATE_DIR/routes.jl .
-cp -r $TEMPLATE_DIR/_setup/$DB/* .
+cp -r $TEMPLATE_SUB_DIR/$DB/* .
 
 if [ $DB = "SQLite" ]; then
   touch $APP_NAME.db
@@ -89,6 +81,14 @@ else
   exit 1
 fi
 
+cat <<EOF >> .gitignore
+
+
+# Jlat customization
+data
+*.db
+*.sqlite3
+EOF
+
 docker compose down
 docker compose build --no-cache
-docker compose up

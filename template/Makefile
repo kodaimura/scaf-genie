@@ -21,6 +21,9 @@ in:
 log:
 	$(DOCKER_COMPOSE_CMD) logs -f
 
+ps:
+	$(DOCKER_COMPOSE_CMD) ps
+
 help:
 	@echo "Usage: make [target] [ENV=dev|prod]"
 	@echo ""
@@ -31,3 +34,4 @@ help:
 	@echo "  stop      Stop containers"
 	@echo "  in        Access app container via bash"
 	@echo "  log       Show logs for the app container"
+	@echo "  ps        Show status for the app container"
