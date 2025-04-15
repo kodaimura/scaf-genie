@@ -17,11 +17,11 @@ Genie.loadapp()
 cd(@__DIR__)
 Pkg.activate(".")
 
-# !!! Main.UserApp is configured as an alias for Main.Jlat and you might encounter it in some tests
-using Main.Jlat, Test, TestSetExtensions, Logging
+# !!! Main.UserApp is configured as an alias for Main.ScafGenie and you might encounter it in some tests
+using Main.ScafGenie, Test, TestSetExtensions, Logging
 
 Logging.global_logger(NullLogger())
 
-@testset ExtendedTestSet "Jlat tests" begin
+@testset ExtendedTestSet "ScafGenie tests" begin
   @includetests ARGS
 end

@@ -1,4 +1,4 @@
-module Jlat
+module ScafGenie
 
 using Genie
 

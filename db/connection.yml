@@ -2,7 +2,7 @@ env: ENV["GENIE_ENV"]
 
 dev:
   adapter: PostgreSQL
-  database: Jlat
+  database: project_db
   host: db
   username: postgres
   password: postgres
