@@ -3,23 +3,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - ./linux/logrotate.d/app:/etc/logrotate.d/app
     ports:
       - "8000:8000"
+    depends_on:
+      - db
     environment:
       - GENIE_ENV=dev
       - JWT_SECRET=secret
-    depends_on:
-      - db
-    volumes:
-      - .:/app
-    tty: true
+    working_dir: /app
     command: julia -e "using Pkg; Pkg.activate(\".\"); using Genie; Genie.loadapp(); up(host = \"0.0.0.0\", async = false);"
+    tty: true
 
   db:
-    image: postgres:16.1
-    environment:
-      POSTGRES_DB: project_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+    image: postgres:17.4
     volumes:
       - ./data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=project_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
