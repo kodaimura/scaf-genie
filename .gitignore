@@ -44,7 +44,11 @@ node_modules/
 
 # Database
 db/*.sqlite
-data
 
 # environment variables file
 .env
+
+# customization
+data
+*.db
+*.sqlite3
