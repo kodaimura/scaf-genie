@@ -11,5 +11,5 @@ services:
     environment:
       - GENIE_ENV=prod
     working_dir: /app
-    command: julia -e "using Pkg; Pkg.activate(\".\"); using Genie; Genie.loadapp(); up(host = \"0.0.0.0\", async = false);"
+    command: ["./entrypoint.sh"]
     tty: true
