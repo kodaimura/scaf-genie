@@ -6,9 +6,11 @@ DOCKER_COMPOSE_CMD = $(DOCKER_COMPOSE) $(DOCKER_COMPOSE_FILE)
 .PHONY: up build down stop in log ps help
 
 up:
+	@chmod +x ./entrypoint.sh
 	$(DOCKER_COMPOSE_CMD) up -d
 
 build:
+	@chmod +x ./entrypoint.sh
 	$(DOCKER_COMPOSE_CMD) build --no-cache
 
 down:

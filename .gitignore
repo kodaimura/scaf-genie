@@ -52,3 +52,4 @@ db/*.sqlite
 data
 *.db
 *.sqlite3
+migration_initialized
