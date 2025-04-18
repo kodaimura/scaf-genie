@@ -18,15 +18,15 @@ route("/signup") do
   return serve_static_file("signup.html")
 end
 
-route("/api/login", method="POST") do
+route("/api/accounts/login", method="POST") do
   return AccountsController.login(get_context())
 end
 
-route("/api/logout", method="POST") do
+route("/api/accounts/logout", method="POST") do
   return AccountsController.logout(get_context())
 end
 
-route("/api/signup", method="POST") do
+route("/api/accounts/signup", method="POST") do
   return AccountsController.signup(get_context())
 end
 
