@@ -47,7 +47,6 @@ function create_jwt(account::Account)::String
         payload = Dict(
         "id" => account.id.value, 
         "account_name" => account.account_name, 
-        "exp" => string(Dates.now() + Dates.Month(3))
     )
     return Jwt.create(payload)
     catch e

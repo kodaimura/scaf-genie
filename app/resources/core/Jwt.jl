@@ -4,6 +4,7 @@ import SHA: hmac_sha256
 import Base64: base64encode, base64decode
 import JSON
 import Dates
+import Logging: @warn
 
 export create, decode_payload, verify
 
@@ -12,11 +13,18 @@ function base64url_encode(data::Vector{UInt8})::AbstractString
 end
 
 function base64url_decode(data::AbstractString)::Vector{UInt8}
-    return base64decode(replace(data, "-" => "+", "_" => "/"))
+    padded = data * repeat("=", (4 - length(data) % 4) % 4)
+    return base64decode(replace(padded, "-" => "+", "_" => "/"))
 end
 
 function create(payload::Dict{String, Any})::String
     header = Dict("alg" => "HS256", "typ" => "JWT")
+    if !haskey(payload, "exp")
+        exp_seconds = tryparse(Int, get(ENV, "AUTH_EXPIRES_SECONDS", "3600"))
+        exp_seconds = isnothing(exp_seconds) ? 3600 : exp_seconds
+        payload["exp"] = string(Dates.now() + Dates.Second(exp_seconds))
+    end
+
     header_encoded = base64url_encode(Vector{UInt8}(codeunits(JSON.json(header))))
     payload_encoded = base64url_encode(Vector{UInt8}(codeunits(JSON.json(payload))))
     secret_key = Vector{UInt8}(codeunits(ENV["JWT_SECRET"]))
@@ -35,6 +43,7 @@ function decode_payload(token::AbstractString)::Union{Dict{String, Any}, Nothing
         payload = JSON.parse(String(base64url_decode(payload_encoded)))
         return payload
     catch e
+        @warn "Failed to decode JWT payload: $e"
         return nothing
     end
 end
@@ -64,12 +73,14 @@ function verify(token::AbstractString)::Bool
         if haskey(payload, "exp")
             exp = payload["exp"]
             if Dates.now() > Dates.DateTime(exp)
+                @warn "JWT exp parse error: $e"
                 return false
             end
         end
 
         return true
     catch e
+        @warn "JWT verification error: $e"
         return false
     end
 end
