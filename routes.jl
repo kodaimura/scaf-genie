@@ -5,6 +5,12 @@ using Genie.Renderer
 using Genie.Renderer.Json
 using HTTP
 
+frontend_origin = get(ENV, "FRONTEND_ORIGIN", "http://localhost:3000")
+Genie.config.cors_headers["Access-Control-Allow-Origin"] = frontend_origin
+Genie.config.cors_headers["Access-Control-Allow-Credentials"] = "true"
+Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+
 route("/") do
   #is_authorized() || return json_unauthorized()
   return serve_static_file("index.html")

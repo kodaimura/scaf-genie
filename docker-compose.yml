@@ -13,6 +13,7 @@ services:
     environment:
       - GENIE_ENV=dev
       - JWT_SECRET=secret
+      - FRONTEND_ORIGIN=http://localhost:3000
     working_dir: /app
     command: ["./entrypoint.sh"]
     tty: true
