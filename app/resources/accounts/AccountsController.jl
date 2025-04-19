@@ -42,8 +42,8 @@ function login(ctx::Dict{String, Any})
             throw(UnauthorizedError())
         end
         token = AccountsService.create_jwt(account)
-        cookie_header = "token=$token; Path=/; HttpOnly; Secure; SameSite=Lax"
-        return RendererJson.json(Dict("token" => token); status=200, headers=Dict("Set-Cookie" => cookie_header))
+        cookie_header = "access_token=$token; Path=/; HttpOnly; Secure; SameSite=Lax"
+        return RendererJson.json(Dict("access_token" => token); status=200, headers=Dict("Set-Cookie" => cookie_header))
     catch e
         return json_error_response(e, Requests.request())
     end
@@ -51,7 +51,7 @@ end
 
 function logout(ctx::Dict{String, Any})
     try
-        cookie_header = "token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        cookie_header = "access_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
         return RendererJson.json(Dict(); status=200, headers=Dict("Set-Cookie" => cookie_header))
     catch e
         return json_error_response(e, Requests.request())

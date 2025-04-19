@@ -55,7 +55,7 @@ end
 
 function get_context()::Dict{String, Any}
   cookie = Genie.Cookies.getcookies(Genie.Requests.request())
-  token = get_cookie_value(cookie, "token")
+  token = get_cookie_value(cookie, "access_token")
   ctx = Dict{String, Any}()
   if !isnothing(token)
     ctx["payload"] = Jwt.decode_payload(token)
@@ -65,7 +65,7 @@ end
 
 function is_authorized()::Bool
   cookie = Genie.Cookies.getcookies(Genie.Requests.request())
-  token = get_cookie_value(cookie, "token")
+  token = get_cookie_value(cookie, "access_token")
   if isnothing(token)
     return false
   end
