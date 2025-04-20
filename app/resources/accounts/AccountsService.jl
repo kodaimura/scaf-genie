@@ -1,7 +1,7 @@
 module AccountsService
 
-include("../core/Errors.jl")
-include("../core/Jwt.jl")
+include("../../helpers/Errors.jl")
+include("../../helpers/Jwt.jl")
 include("Accounts.jl")
 
 using Reexport

@@ -1,6 +1,6 @@
 module AccountsController
 
-include("../core/Validation.jl")
+include("../../helpers/Validation.jl")
 include("AccountsService.jl")
 
 import Genie.Renderer.Json as RendererJson
