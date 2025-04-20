@@ -4,7 +4,7 @@ import SHA: hmac_sha256
 import Base64: base64encode, base64decode
 import JSON
 import Dates
-import Logging: @warn
+using Logging
 
 export create, decode_payload, verify
 
@@ -73,14 +73,13 @@ function verify(token::AbstractString)::Bool
         if haskey(payload, "exp")
             exp = payload["exp"]
             if Dates.now() > Dates.DateTime(exp)
-                @warn "JWT exp parse error: $e"
                 return false
             end
         end
 
         return true
     catch e
-        @warn "JWT verification error: $e"
+        @error "JWT verification error: $e"
         return false
     end
 end
