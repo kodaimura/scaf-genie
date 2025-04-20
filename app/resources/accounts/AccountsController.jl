@@ -1,25 +1,20 @@
 module AccountsController
 
+include("../core/Validation.jl")
 include("AccountsService.jl")
 
 import Genie.Renderer.Json as RendererJson
 import Genie.Requests as Requests
 
+using .Validation
 using .AccountsService
 
 export signup, login, logout
 
-function validate_request_keys(request::Dict{String, Any}, keys::Vector{String})
-    missing_keys = [key for key in keys if !haskey(request, key)]
-    if !isempty(missing_keys)
-        throw(BadRequestError("Missing required keys: $(join(missing_keys, ", "))"))
-    end
-end
-
 function signup(ctx::Dict{String, Any})
     request = Requests.jsonpayload()
     try
-        validate_request_keys(request, ["account_name", "account_password"])
+        validate_signup(request)
         account_name = request["account_name"]
         account_password = request["account_password"]
 
@@ -30,10 +25,20 @@ function signup(ctx::Dict{String, Any})
     end
 end
 
+function validate_signup(request::Dict{String, Any})
+    require_keys(request, ["account_name", "account_password"])
+    account_name = request["account_name"]
+    account_password = request["account_password"]
+
+    validate_not_empty(account_name, "account_name")
+    validate_not_empty(account_password, "account_password")
+    validate_min_length(account_password, "account_password", 8)
+end
+
 function login(ctx::Dict{String, Any})
     request = Requests.jsonpayload()
     try
-        validate_request_keys(request, ["account_name", "account_password"])
+        validate_login(request)
         account_name = request["account_name"]
         account_password = request["account_password"]
         
@@ -47,6 +52,15 @@ function login(ctx::Dict{String, Any})
     catch e
         return json_error_response(e, Requests.request())
     end
+end
+
+function validate_login(request::Dict{String, Any})
+    require_keys(request, ["account_name", "account_password"])
+    account_name = request["account_name"]
+    account_password = request["account_password"]
+
+    validate_not_empty(account_name, "account_name")
+    validate_not_empty(account_password, "account_password")
 end
 
 function logout(ctx::Dict{String, Any})
