@@ -5,7 +5,7 @@ include("AccountsService.jl")
 import Genie.Requests as Requests
 
 import .AccountsService
-import ScafGenie.JsonResponse
+using ScafGenie.Responses
 using ScafGenie.Errors
 using ScafGenie.Validations
 
@@ -23,9 +23,9 @@ function signup(ctx::Dict{String, Any})
         account_password = request["account_password"]
 
         AccountsService.signup(account_name, account_password)
-        return JsonResponse.success(; status=201)
+        return json_success(; status=201)
     catch e
-        return JsonResponse.fail(e)
+        return json_fail(e)
     end
 end
 
@@ -45,18 +45,18 @@ function login(ctx::Dict{String, Any})
         end
         token = AccountsService.create_jwt(account)
         headers = Dict("Set-Cookie" => "access_token=$token; Path=/; HttpOnly; Secure; SameSite=Lax")
-        return JsonResponse.success(Dict("access_token" => token); status=200, headers=headers)
+        return json_success(Dict("access_token" => token); status=200, headers=headers)
     catch e
-        return JsonResponse.fail(e)
+        return json_fail(e)
     end
 end
 
 function logout(ctx::Dict{String, Any})
     try
         headers = Dict("Set-Cookie" => "access_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
-        return JsonResponse.success(; status=200, headers=headers)
+        return json_success(; status=200, headers=headers)
     catch e
-        return JsonResponse.fail(e)
+        return json_fail(e)
     end
 end
 

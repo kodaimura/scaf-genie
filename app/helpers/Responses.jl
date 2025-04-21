@@ -1,15 +1,18 @@
-module JsonResponse
+module Responses
 
-import Genie.Renderer.Json
+import Genie
+using ScafGenie.Errors
 
-function success(data::Dict=Dict(); status=200, headers=nothing)
+export json_success, json_fail
+
+function json_success(data::Dict=Dict(); status=200, headers=nothing)
     if isnothing(headers)
         return Genie.Renderer.Json.json(data; status=status)
     end
     return Genie.Renderer.Json.json(data; status=status, headers=headers)
 end
 
-function fail(e::Exception; status=nothing, message=nothing, details=nothing)
+function json_fail(e::Exception; status=nothing, message=nothing, details=nothing)
     status = isnothing(status) ? get_code(e) : status
     message = isnothing(message) ? get_message(e) : message
     details = isnothing(details) ? get_details(e) : details
