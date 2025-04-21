@@ -4,7 +4,6 @@ import SHA: hmac_sha256
 import Base64: base64encode, base64decode
 import JSON
 import Dates
-using Logging
 
 export create, decode_payload, verify
 
@@ -43,7 +42,6 @@ function decode_payload(token::AbstractString)::Union{Dict{String, Any}, Nothing
         payload = JSON.parse(String(base64url_decode(payload_encoded)))
         return payload
     catch e
-        @warn "Failed to decode JWT payload: $e"
         return nothing
     end
 end
@@ -79,7 +77,6 @@ function verify(token::AbstractString)::Bool
 
         return true
     catch e
-        @error "JWT verification error: $e"
         return false
     end
 end

@@ -1,93 +1,87 @@
 module Errors
 
-import Genie.Renderer.Json as RendererJson
-import HTTP
-import JSON
+export AppError,
+       ExpectedError, 
+       UnexpectedError,
+       BadRequestError, 
+       UnauthorizedError, 
+       ForbiddenError,
+       NotFoundError, 
+       ConflictError,
+       InternalServerError, 
+       ServiceUnavailableError
 
-export handle_exception, json_error_response
-export ExpectedError, UnexpectedError
-export BadRequestError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictError
-export InternalServerError, ServiceUnavailableError
+export get_code, get_message, get_details
 
-abstract type ExpectedError <: Exception end
-abstract type UnexpectedError <: Exception end
+abstract type AppError <: Exception end
+
+abstract type ExpectedError <: AppError end
+abstract type UnexpectedError <: AppError end
 
 mutable struct BadRequestError <: ExpectedError
+    code::Int
     message::String
+    details::Vector{Pair{String,String}}
+    BadRequestError(msg::String="Bad Request"; details=Pair{String,String}[]) = new(400, msg, details)
 end
-mutable struct UnauthorizedError <: ExpectedError end
-mutable struct ForbiddenError <: ExpectedError end 
-mutable struct NotFoundError <: ExpectedError end
-mutable struct ConflictError <: ExpectedError end
 
-mutable struct InternalServerError <: UnexpectedError end
-mutable struct ServiceUnavailableError <: UnexpectedError end
+mutable struct UnauthorizedError <: ExpectedError
+    code::Int
+    message::String
+    UnauthorizedError(msg::String="Unauthorized") = new(401, msg)
+end
 
-# サービス層用のエラーハンドリング
-function handle_exception(e::Exception)
-    if e isa ExpectedError
-        throw(e)
+mutable struct ForbiddenError <: ExpectedError
+    code::Int
+    message::String
+    ForbiddenError(msg::String="Forbidden") = new(403, msg)
+end
+
+mutable struct NotFoundError <: ExpectedError
+    code::Int
+    message::String
+    NotFoundError(msg::String="Not Found") = new(404, msg)
+end
+
+mutable struct ConflictError <: ExpectedError
+    code::Int
+    message::String
+    ConflictError(msg::String="Conflict") = new(409, msg)
+end
+
+mutable struct InternalServerError <: UnexpectedError
+    code::Int
+    message::String
+    InternalServerError(msg::String="Internal Server Error") = new(500, msg)
+end
+
+mutable struct ServiceUnavailableError <: UnexpectedError
+    code::Int
+    message::String
+    ServiceUnavailableError(msg::String="Service Unavailable") = new(503, msg)
+end
+
+function get_code(e::Exception)
+    if e isa AppError
+        return e.code
     else
-        @error "$e"
-        throw(InternalServerError())
-    end
-end
-
-# コントローラ層用のJSONレスポンスエラーハンドリング
-function json_error_response(e::Exception, request::HTTP.Request)
-    status_code = get_status_code(e)
-    message = get_error_message(e)
-    if e isa UnexpectedError
-        @error "request: $request"
-    end
-    return RendererJson.json(Dict("error" => message); status=status_code)
-end
-
-function get_status_code(e::Exception)
-    if e isa BadRequestError
-        return 400
-    elseif e isa UnauthorizedError
-        return 401
-    elseif e isa ForbiddenError
-        return 403
-    elseif e isa NotFoundError
-        return 404
-    elseif e isa ConflictError
-        return 409
-    elseif e isa InternalServerError
-        return 500
-    elseif e isa ServiceUnavailableError
-        return 503
-    else
         return 500
     end
 end
 
-function get_error_message(e::Exception)
-    if e isa ExpectedError
-        if e isa BadRequestError
-            return "Bad request. $(e.message)"
-        elseif e isa UnauthorizedError
-            return "Unauthorized access."
-        elseif e isa ForbiddenError
-            return "Forbidden action."
-        elseif e isa NotFoundError
-            return "Resource not found."
-        elseif e isa ConflictError
-            return "Conflict with existing resource."
-        else
-            return "Expected error."
-        end
-    elseif e isa UnexpectedError
-        if e isa InternalServerError
-            return "Server error."
-        elseif e isa ServiceUnavailableError
-            return "Service unavailable."
-        else
-            return "Unexpected error."
-        end
+function get_message(e::Exception)
+    if e isa AppError
+        return e.message
     else
         return "Unknown error."
+    end
+end
+
+function get_details(e::Exception)
+    if e isa BadRequestError
+        return e.details
+    else
+        return []
     end
 end
 
