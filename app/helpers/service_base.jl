@@ -9,7 +9,7 @@ export handle_exception
 function handle_exception(e::Exception)
     if e isa AppError
         if e isa ExpectedError
-            @debug "$e" 
+            @debug "$e"
         else 
             @error Requests.request()
             @error "$e"
@@ -18,7 +18,7 @@ function handle_exception(e::Exception)
     end
     @error Requests.request()
     @error "$e"
-    throw(InternalServerError)
+    throw(InternalServerError())
 end
 
 end

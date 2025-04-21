@@ -41,7 +41,7 @@ function login(ctx::Dict{String, Any})
         
         account = AccountsService.login(account_name, account_password)
         if isnothing(account)
-            throw(UnauthorizedError)
+            throw(UnauthorizedError())
         end
         token = AccountsService.create_jwt(account)
         headers = Dict("Set-Cookie" => "access_token=$token; Path=/; HttpOnly; Secure; SameSite=Lax")
