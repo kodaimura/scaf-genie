@@ -3,17 +3,17 @@ module Validations
 import ScafGenie.Errors: BadRequestError
 
 export validate_require,
-       validate_min_length,
-       validate_max_length,
-       validate_email_format,
-       validate_matches_regex,
-       validate_numeric,
-       validate_integer,
-       validate_positive,
-       validate_in_set,
-       validate_equals,
-       validate_not_equals,
-       validate_fields
+    validate_min_length,
+    validate_max_length,
+    validate_email_format,
+    validate_matches_regex,
+    validate_numeric,
+    validate_integer,
+    validate_positive,
+    validate_in_set,
+    validate_equals,
+    validate_not_equals,
+    validate_fields
 
 function validate_require(request::Dict, field::String)
     (!haskey(request, field) || isempty(request[field])) ? (key => "is required") : []
@@ -87,7 +87,7 @@ function validate_not_equals(request::Dict, field::String, unexpected)
 end
 
 function validate_fields(validators::Vector{Function})
-    errors = Pair{String, String}[]
+    errors = Pair{String,String}[]
     for validator in validators
         append!(errors, validator())
     end

@@ -21,7 +21,10 @@ function signup(account_name::String, account_password::String)
         if !isnothing(account)
             throw(ConflictError())
         end
-        account = Account(account_name=account_name, account_password=hash_password(account_password))
+        account = Account(
+            account_name = account_name,
+            account_password = hash_password(account_password),
+        )
         SearchLight.save!(account)
     catch e
         ServiceBase.handle_exception(e)
@@ -45,10 +48,7 @@ end
 
 function create_jwt(account::Account)::String
     try
-        payload = Dict(
-            "id" => account.id.value, 
-            "account_name" => account.account_name, 
-        )
+        payload = Dict("id" => account.id.value, "account_name" => account.account_name)
         return Jwt.create(payload)
     catch e
         ServiceBase.handle_exception(e)

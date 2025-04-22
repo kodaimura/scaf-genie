@@ -16,7 +16,7 @@ function base64url_decode(data::AbstractString)::Vector{UInt8}
     return base64decode(replace(padded, "-" => "+", "_" => "/"))
 end
 
-function create(payload::Dict{String, Any})::String
+function create(payload::Dict{String,Any})::String
     header = Dict("alg" => "HS256", "typ" => "JWT")
     if !haskey(payload, "exp")
         exp_seconds = tryparse(Int, get(ENV, "AUTH_EXPIRES_SECONDS", "3600"))
@@ -32,7 +32,7 @@ function create(payload::Dict{String, Any})::String
     return "$header_encoded.$payload_encoded.$signature_encoded"
 end
 
-function decode_payload(token::AbstractString)::Union{Dict{String, Any}, Nothing}
+function decode_payload(token::AbstractString)::Union{Dict{String,Any},Nothing}
     parts = split(token, ".")
     if length(parts) != 3
         return nothing

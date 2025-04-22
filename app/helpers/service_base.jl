@@ -10,7 +10,7 @@ function handle_exception(e::Exception)
     if e isa AppError
         if e isa ExpectedError
             @debug "$e"
-        else 
+        else
             @error Requests.request()
             @error "$e"
         end

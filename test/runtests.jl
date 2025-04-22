@@ -23,5 +23,5 @@ using Main.ScafGenie, Test, TestSetExtensions, Logging
 Logging.global_logger(NullLogger())
 
 @testset ExtendedTestSet "ScafGenie tests" begin
-  @includetests ARGS
+    @includetests ARGS
 end

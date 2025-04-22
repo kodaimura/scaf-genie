@@ -10,5 +10,5 @@ services:
     environment:
       - GENIE_ENV=prod
     working_dir: /app
-    command: ["./entrypoint.sh"]
+    command: [ "./entrypoint.sh" ]
     tty: true
