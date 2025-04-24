@@ -2,7 +2,7 @@
 set -e
 
 if [ ! -f "/app/migration_initialized" ]; then
-    julia -e "using Pkg; 
+  julia -e "using Pkg; 
     Pkg.activate(\".\"); 
     Pkg.instantiate();
     using SearchLight, SearchLightPostgreSQL;
@@ -10,7 +10,7 @@ if [ ! -f "/app/migration_initialized" ]; then
     SearchLight.connect();
     SearchLight.Migration.init();"
     
-    touch /app/migration_initialized
+  touch /app/migration_initialized
 fi
 
 julia -e "
