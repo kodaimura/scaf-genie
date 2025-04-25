@@ -7,6 +7,7 @@ import Dates
 
 export create, verify
 
+# Generates a JWT token by encoding the header, payload, and secret key.
 function create(payload::Dict{String,Any})::String
     header = Dict("alg" => "HS256", "typ" => "JWT")
     if !haskey(payload, "exp")
@@ -23,6 +24,7 @@ function create(payload::Dict{String,Any})::String
     return "$header_encoded.$payload_encoded.$signature_encoded"
 end
 
+# Verifies a JWT token and returns the payload if valid, or nothing if invalid.
 function verify(token::AbstractString)::Union{Dict{String,Any},Nothing}
     parts = split(token, ".")
     if length(parts) != 3

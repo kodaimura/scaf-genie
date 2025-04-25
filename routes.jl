@@ -12,7 +12,6 @@ Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type, Autho
 
 route("/") do
     #is_authorized() || return json_unauthorized()
-
     return serve_static_file("index.html")
 end
 

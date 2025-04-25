@@ -7,6 +7,7 @@ using ..Jwt
 
 export authenticated, is_authenticated
 
+# Verifies the access token and returns user data if valid, or nothing if invalid.
 function authenticated()::Union{Dict{String,Any},Nothing}
     token = get_access_token()
     isnothing(token) && return nothing
@@ -17,6 +18,7 @@ function authenticated()::Union{Dict{String,Any},Nothing}
     end
 end
 
+# Returns true if the user is authenticated, false otherwise.
 function is_authenticated()::Bool
     return !isnothing(authenticated())
 end

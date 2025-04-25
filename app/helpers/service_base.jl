@@ -6,6 +6,7 @@ using ..Errors
 
 export handle_exception
 
+# Handles and logs exceptions, throwing appropriate errors.
 function handle_exception(e::Exception)
     if e isa AppError
         if e isa ExpectedError
