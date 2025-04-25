@@ -1,6 +1,6 @@
 module Validations
 
-import ScafGenie.Errors: BadRequestError
+import ..Errors: BadRequestError
 
 export validate_require,
     validate_min_length,
@@ -86,10 +86,10 @@ function validate_not_equals(request::Dict, field::String, unexpected)
     value == unexpected ? [(field => "must not be $unexpected")] : []
 end
 
-function validate_fields(validators::Vector{Function})
+function validate_fields(validators::Vector{Function}, request::Dict)
     errors = Pair{String,String}[]
     for validator in validators
-        append!(errors, validator())
+        append!(errors, validator(request))
     end
     if !isempty(errors)
         throw(BadRequestError(; details=errors))

@@ -2,7 +2,7 @@ module ServiceBase
 
 import Genie.Requests as Requests
 using Logging
-using ScafGenie.Errors
+using ..Errors
 
 export handle_exception
 

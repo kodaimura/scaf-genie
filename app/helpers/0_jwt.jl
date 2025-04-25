@@ -5,16 +5,7 @@ import Base64: base64encode, base64decode
 import JSON
 import Dates
 
-export create, decode_payload, verify
-
-function base64url_encode(data::Vector{UInt8})::AbstractString
-    return replace(base64encode(String(data)), r"\+" => "-", "/" => "_", "=" => "")
-end
-
-function base64url_decode(data::AbstractString)::Vector{UInt8}
-    padded = data * repeat("=", (4 - length(data) % 4) % 4)
-    return base64decode(replace(padded, "-" => "+", "_" => "/"))
-end
+export create, verify
 
 function create(payload::Dict{String,Any})::String
     header = Dict("alg" => "HS256", "typ" => "JWT")
@@ -32,24 +23,10 @@ function create(payload::Dict{String,Any})::String
     return "$header_encoded.$payload_encoded.$signature_encoded"
 end
 
-function decode_payload(token::AbstractString)::Union{Dict{String,Any},Nothing}
+function verify(token::AbstractString)::Union{Dict{String,Any},Nothing}
     parts = split(token, ".")
     if length(parts) != 3
         return nothing
-    end
-    _, payload_encoded, _ = parts
-    try
-        payload = JSON.parse(String(base64url_decode(payload_encoded)))
-        return payload
-    catch e
-        return nothing
-    end
-end
-
-function verify(token::AbstractString)::Bool
-    parts = split(token, ".")
-    if length(parts) != 3
-        return false
     end
 
     header_encoded, payload_encoded, signature_encoded = parts
@@ -57,28 +34,37 @@ function verify(token::AbstractString)::Bool
     try
         header = JSON.parse(String(base64url_decode(header_encoded)))
         if get(header, "alg", "") != "HS256"
-            return false
+            return nothing
         end
 
         secret_key = Vector{UInt8}(ENV["JWT_SECRET"])
         expected_signature = hmac_sha256(secret_key, "$header_encoded.$payload_encoded")
         expected_signature_encoded = base64url_encode(expected_signature)
         if signature_encoded != expected_signature_encoded
-            return false
+            return nothing
         end
 
         payload = JSON.parse(String(base64url_decode(payload_encoded)))
         if haskey(payload, "exp")
             exp = payload["exp"]
             if Dates.now() > Dates.DateTime(exp)
-                return false
+                return nothing
             end
         end
 
-        return true
+        return payload
     catch e
-        return false
+        return nothing
     end
+end
+
+function base64url_encode(data::Vector{UInt8})::AbstractString
+    return replace(base64encode(String(data)), r"\+" => "-", "/" => "_", "=" => "")
+end
+
+function base64url_decode(data::AbstractString)::Vector{UInt8}
+    padded = data * repeat("=", (4 - length(data) % 4) % 4)
+    return base64decode(replace(padded, "-" => "+", "_" => "/"))
 end
 
 end
