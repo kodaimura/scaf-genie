@@ -8,8 +8,8 @@ using ..Jwt
 
 export authenticated, 
     is_authenticated, 
-    get_access_token,
-    get_refresh_token,
+    refreshable,
+    is_refreshable,
     access_token_cookie_header,
     refresh_token_cookie_header
 
@@ -37,6 +37,22 @@ function get_access_token()::Union{String,Nothing}
         end
     end
     return nothing
+end
+
+# Verifies the refresh token and returns user data if valid, or nothing if invalid.
+function refreshable()::Union{Dict{String,Any},Nothing}
+    token = get_refresh_token()
+    isnothing(token) && return nothing
+    try
+        return Jwt.verify_refresh_token(token)
+    catch e
+        return nothing
+    end
+end
+
+# Returns true if the user is refreshable, false otherwise.
+function is_refreshable()::Bool
+    return !isnothing(refreshable())
 end
 
 function get_refresh_token()::Union{String,Nothing}

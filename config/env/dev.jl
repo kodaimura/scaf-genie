@@ -9,7 +9,12 @@ Genie.Configuration.config!(
   path_build                      = "build",
   format_julia_builds             = true,
   format_html_output              = true,
-  watch                           = true
+  watch                           = true,
+
+  #Custom
+  path_lib                        = "app/libs",
+  path_helpers                    = "app/helpers",
+  autoload                        = [:initializers, :libs, :helpers, :resources, :plugins, :routes, :app],
 )
 
 ENV["JULIA_REVISE"] = "auto"
