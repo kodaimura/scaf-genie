@@ -5,27 +5,51 @@ import Base64: base64encode, base64decode
 import JSON
 import Dates
 
-export create, verify
+export create_access_token, 
+    create_refresh_token, 
+    verify_access_token, 
+    verify_refresh_token
 
 # Generates a JWT token by encoding the header, payload, and secret key.
-function create(payload::Dict{String,Any})::String
+function create_access_token(payload::Dict{String,Any})::String
+    expires_seconds = tryparse(Int, ENV["ACCESS_TOKEN_EXPIRES_SECONDS"])
+    secret = ENV["ACCESS_TOKEN_SECRET"]
+    return create_token(payload, secret, expires_seconds)
+end
+
+# Generates a JWT token by encoding the header, payload, and secret key.
+function create_refresh_token(payload::Dict{String,Any})::String
+    expires_seconds = tryparse(Int, ENV["REFRESH_TOKEN_EXPIRES_SECONDS"])
+    secret = ENV["REFRESH_TOKEN_SECRET"]
+    return create_token(payload, secret, expires_seconds)
+end
+
+function create_token(payload::Dict{String,Any}, secret::String, expires_seconds::Int)::String
     header = Dict("alg" => "HS256", "typ" => "JWT")
     if !haskey(payload, "exp")
-        exp_seconds = tryparse(Int, get(ENV, "AUTH_EXPIRES_SECONDS", "3600"))
-        exp_seconds = isnothing(exp_seconds) ? 3600 : exp_seconds
-        payload["exp"] = string(Dates.now() + Dates.Second(exp_seconds))
+        payload["exp"] = string(Dates.now() + Dates.Second(expires_seconds))
     end
-
     header_encoded = base64url_encode(Vector{UInt8}(codeunits(JSON.json(header))))
     payload_encoded = base64url_encode(Vector{UInt8}(codeunits(JSON.json(payload))))
-    secret_key = Vector{UInt8}(codeunits(ENV["JWT_SECRET"]))
+    secret_key = Vector{UInt8}(codeunits(secret))
     signature = hmac_sha256(secret_key, "$header_encoded.$payload_encoded")
     signature_encoded = base64url_encode(signature)
     return "$header_encoded.$payload_encoded.$signature_encoded"
 end
 
 # Verifies a JWT token and returns the payload if valid, or nothing if invalid.
-function verify(token::AbstractString)::Union{Dict{String,Any},Nothing}
+function verify_access_token(token::AbstractString)::Union{Dict{String,Any},Nothing}
+    secret = ENV["ACCESS_TOKEN_SECRET"]
+    return verify_token(token, secret)
+end
+
+# Verifies a JWT token and returns the payload if valid, or nothing if invalid.
+function verify_refresh_token(token::AbstractString)::Union{Dict{String,Any},Nothing}
+    secret = ENV["REFRESH_TOKEN_SECRET"]
+    return verify_token(token, secret)
+end
+
+function verify_token(token::AbstractString, secret::String)::Union{Dict{String,Any},Nothing}
     parts = split(token, ".")
     if length(parts) != 3
         return nothing
@@ -39,7 +63,7 @@ function verify(token::AbstractString)::Union{Dict{String,Any},Nothing}
             return nothing
         end
 
-        secret_key = Vector{UInt8}(ENV["JWT_SECRET"])
+        secret_key = Vector{UInt8}(secret)
         expected_signature = hmac_sha256(secret_key, "$header_encoded.$payload_encoded")
         expected_signature_encoded = base64url_encode(expected_signature)
         if signature_encoded != expected_signature_encoded

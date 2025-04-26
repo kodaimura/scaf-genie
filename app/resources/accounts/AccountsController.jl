@@ -9,6 +9,8 @@ import .AccountsService
 using .AccountsRequest
 using ScafGenie.Responses
 using ScafGenie.Errors
+using ScafGenie.Auth
+using ScafGenie.Jwt
 
 export signup, login, logout, me
 
@@ -37,11 +39,23 @@ function login()
         if isnothing(account)
             throw(UnauthorizedError())
         end
-        token = AccountsService.create_jwt(account)
-        headers = Dict(
-            "Set-Cookie" => "access_token=$token; Path=/; HttpOnly; Secure; SameSite=Lax",
+        access_token = Jwt.create_access_token(Dict(
+            "id" => account.id.value, 
+            "account_name" => account.account_name
+        ))
+        refresh_token = Jwt.create_refresh_token(Dict(
+            "id" => account.id.value, 
+            "account_name" => account.account_name
+        ))
+
+        cookies = [
+            access_token_cookie_header(access_token),
+            refresh_token_cookie_header(refresh_token)
+        ]
+        return json_success(
+            Dict("access_token" => access_token, "refresh_token" => refresh_token);
+            status=200, headers=Dict("Set-Cookie" => join(cookies, "\nSet-Cookie: "))
         )
-        return json_success(Dict("access_token" => token); status=200, headers=headers)
     catch e
         return json_fail(e)
     end
@@ -49,13 +63,34 @@ end
 
 function logout()
     try
-        headers = Dict(
-            "Set-Cookie" => "access_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-        )
-        return json_success(; status=200, headers=headers)
+        cookies = [
+            access_token_cookie_header(""; options="Expires=-1"),
+            refresh_token_cookie_header(""; options="Expires=-1")
+        ]
+        return json_success(;status=200, headers=Dict("Set-Cookie" => join(cookies, "\nSet-Cookie: ")))
     catch e
         return json_fail(e)
     end
+end
+
+function refresh()
+    try
+        refresh_token = get_refresh_token()
+        isnothing(refresh_token) && throw(UnauthorizedError("invalid or expired refresh token"))
+        
+        payload = Jwt.verify_refresh_token(refresh_token)
+        isnothing(payload) && throw(UnauthorizedError("invalid or expired refresh token"))
+
+        access_token = Jwt.create_access_token(Dict(
+            "id" => payload["id"], 
+            "account_name" => payload["account_name"]
+        ))
+        cookies = [access_token_cookie_header(access_token)]
+        return json_success(;status=200, headers=Dict("Set-Cookie" => join(cookies, "\nSet-Cookie: ")))
+    catch e
+        return json_fail(e)
+    end
+    
 end
 
 function me(payload::Dict{String,Any})

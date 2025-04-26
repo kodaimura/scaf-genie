@@ -35,6 +35,10 @@ route("/api/accounts/signup", method="POST") do
     return AccountsController.signup()
 end
 
+route("/api/accounts/refresh", method="POST") do
+    return AccountsController.refresh()
+end
+
 route("/api/accounts/me") do
     with_auth() do payload
         return AccountsController.me(payload)

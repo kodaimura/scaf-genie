@@ -10,9 +10,8 @@ import Dates
 import .Accounts: Account
 import ScafGenie.ServiceBase
 using ScafGenie.Errors
-import ScafGenie.Jwt
 
-export signup, login, create_jwt
+export signup, login
 
 function signup(account_name::String, account_password::String)
     try
@@ -40,15 +39,6 @@ function login(account_name::String, account_password::String)::Account
             throw(UnauthorizedError())
         end
         return account
-    catch e
-        ServiceBase.handle_exception(e)
-    end
-end
-
-function create_jwt(account::Account)::String
-    try
-        payload = Dict("id" => account.id.value, "account_name" => account.account_name)
-        return Jwt.create(payload)
     catch e
         ServiceBase.handle_exception(e)
     end

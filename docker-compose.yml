@@ -11,8 +11,14 @@ services:
       - db
     environment:
       - GENIE_ENV=dev
-      - JWT_SECRET=secret
-      - AUTH_EXPIRES_SECONDS=3600
+      - ACCESS_TOKEN_SECRET=randomstring
+      - ACCESS_TOKEN_EXPIRES_SECONDS=900
+      - REFRESH_TOKEN_SECRET=randomstring
+      - REFRESH_TOKEN_EXPIRES_SECONDS=86400
+      - COOKIE_ACCESS_SECURE=false
+      - COOKIE_REFRESH_SECURE=false
+      - COOKIE_ACCESS_HTTPONLY=true
+      - COOKIE_REFRESH_HTTPONLY=true
       - FRONTEND_ORIGIN=http://localhost:3000
     working_dir: /app
     command: [ "./entrypoint.sh" ]
