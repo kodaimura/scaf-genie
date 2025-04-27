@@ -71,8 +71,8 @@ function refresh()
             "id" => payload["id"],
             "account_name" => payload["account_name"]
         ))
-        cookies = [access_token_cookie_header(access_token)]
-        return json_success(;status=200, headers=Dict("Set-Cookie" => join(cookies, "\nSet-Cookie: ")))
+        cookie = access_token_cookie_header(access_token)
+        return json_success(;status=200, headers=Dict("Set-Cookie" => cookie))
     catch e
         app_error = handle_exception(e)
         return json_fail(app_error)

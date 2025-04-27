@@ -25,9 +25,9 @@ function json_success(data::Dict=Dict(); status=200, headers=nothing)
     return Genie.Renderer.Json.json(data; status=status, headers=headers)
 end
 
-# Returns a JSON error response based on the given exception.
+# Returns a JSON error response based on the given AppError.
 # Optional overrides for status, message, and details.
-function json_fail(e::Exception; status=nothing, message=nothing, details=nothing)
+function json_fail(e::AppError; status=nothing, message=nothing, details=nothing)
     status = isnothing(status) ? get_code(e) : status
     message = isnothing(message) ? get_message(e) : message
     details = isnothing(details) ? get_details(e) : details
@@ -72,15 +72,15 @@ function json_unavailable(message::String = "Service Unavailable")
     json_fail(ServiceUnavailableError(message))
 end
 
-# Returns an HTML error page based on the given exception.
-# Optional overrides for status, message, and details.
+# Returns an HTML success page based on the given template.
+# Allows optional overrides for layout and additional variables.
 function html_success(resources::Symbol, template::Symbol; layout::Union{Symbol,Nothing}=nothing, vars...)
     return Genie.Renderer.Html.html(resources, template; layout=layout, vars...)
 end
 
-# Returns an HTML error page based on the given exception.
+# Returns an HTML error page based on the given AppError.
 # Optional overrides for status, message, and details.
-function html_fail(e::Exception; status=nothing, message=nothing)
+function html_fail(e::AppError; status=nothing, message=nothing)
     status = isnothing(status) ? get_code(e) : status
     message = isnothing(message) ? get_message(e) : message
     if status == 401
