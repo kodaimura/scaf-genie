@@ -12,6 +12,7 @@ export json_success,
     json_conflict,
     json_internal,
     json_unavailable,
+    html_error,
     redirect_login
 
 # Returns a JSON response for successful operations.
@@ -68,6 +69,20 @@ end
 # Shortcut for 503 Service Unavailable
 function json_unavailable(message::String = "Service Unavailable")
     json_fail(ServiceUnavailableError(message))
+end
+
+# Returns an HTML error page based on the given exception.
+# Optional overrides for status, message, and details.
+function html_error(e::Exception; status=nothing, message=nothing)
+    status = isnothing(status) ? get_code(e) : status
+    message = isnothing(message) ? get_message(e) : message
+    if status == 401
+        return redirect_login()
+    elseif status == 404
+        return Genie.Renderer.Html.serve_error_file(status, message)
+    else
+        return Genie.Renderer.Html.serve_error_file(500, message)
+    end
 end
 
 # Redirects to the login page (useful for unauthorized access handling)
