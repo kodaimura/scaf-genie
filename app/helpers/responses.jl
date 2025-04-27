@@ -12,7 +12,8 @@ export json_success,
     json_conflict,
     json_internal,
     json_unavailable,
-    html_error,
+    html_success,
+    html_fail,
     redirect_login
 
 # Returns a JSON response for successful operations.
@@ -73,7 +74,13 @@ end
 
 # Returns an HTML error page based on the given exception.
 # Optional overrides for status, message, and details.
-function html_error(e::Exception; status=nothing, message=nothing)
+function html_success(resources::Symbol, template::Symbol; layout::Union{Symbol,Nothing}=nothing, vars...)
+    return Genie.Renderer.Html.html(resources, template; layout=layout, vars...)
+end
+
+# Returns an HTML error page based on the given exception.
+# Optional overrides for status, message, and details.
+function html_fail(e::Exception; status=nothing, message=nothing)
     status = isnothing(status) ? get_code(e) : status
     message = isnothing(message) ? get_message(e) : message
     if status == 401

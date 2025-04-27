@@ -13,7 +13,7 @@ Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type, Autho
 
 route("/") do
     with_web_auth() do payload
-        return serve_static_file("index.html")
+        return MiscController.index(payload)
     end
 end
 
