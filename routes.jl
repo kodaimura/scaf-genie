@@ -1,6 +1,7 @@
 using Genie.Router
 using Genie.Renderer
 
+using ScafGenie.Jwt
 using ScafGenie.Auth
 using ScafGenie.Responses
 
@@ -11,8 +12,9 @@ Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DEL
 Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
 
 route("/") do
-    #is_authorized() || return json_unauthorized()
-    return serve_static_file("index.html")
+    with_web_auth() do payload
+        return serve_static_file("index.html")
+    end
 end
 
 route("/login") do
@@ -40,14 +42,29 @@ route("/api/accounts/refresh", method="POST") do
 end
 
 route("/api/accounts/me") do
-    with_auth() do payload
+    with_api_auth() do payload
         return AccountsController.me(payload)
     end
 end
 
 ###################################################################################################
 
-function with_auth(f::Function)
+function with_web_auth(f::Function)
+    payload = authenticated()
+    if isnothing(payload)
+        payload = refreshable()
+        isnothing(payload) && return redirect_login()
+        access_token = create_access_token(Dict(
+            "id" => payload["id"],
+            "account_name" => payload["account_name"]
+        ))
+        payload = verify_access_token(access_token)
+        isnothing(payload) && return redirect_login()
+    end
+    return f(payload)
+end
+
+function with_api_auth(f::Function)
     payload = authenticated()
     if isnothing(payload)
         return json_unauthorized()
