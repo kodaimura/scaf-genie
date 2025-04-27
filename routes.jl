@@ -1,5 +1,6 @@
 using Genie.Router
 using Genie.Renderer
+import Genie.Responses: setheaders!
 
 using ScafGenie.Jwt
 using ScafGenie.Auth
@@ -60,6 +61,9 @@ function with_web_auth(f::Function)
         ))
         payload = verify_access_token(access_token)
         isnothing(payload) && return redirect_login()
+
+        cookie = access_token_cookie_header(access_token)
+        return setheaders!(f(payload), Dict("Set-Cookie" => cookie))
     end
     return f(payload)
 end
