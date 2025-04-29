@@ -57,7 +57,7 @@ function login()
                 "access_token" => access_token,
                 "access_expires_in" => tryparse(Int, ENV["ACCESS_TOKEN_EXPIRES_SECONDS"]),
                 "refresh_token" => refresh_token,
-                "refresh_expires_in" tryparse(Int, ENV["REFRESH_TOKEN_EXPIRES_SECONDS"]),
+                "refresh_expires_in" => tryparse(Int, ENV["REFRESH_TOKEN_EXPIRES_SECONDS"]),
             ); status=200, headers=Dict("Set-Cookie" => join(cookies, "\nSet-Cookie: "))
         )
     catch e
