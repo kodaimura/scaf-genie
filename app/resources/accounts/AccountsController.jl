@@ -53,8 +53,12 @@ function login()
             refresh_token_cookie_header(refresh_token)
         ]
         return json_success(
-            Dict("access_token" => access_token, "refresh_token" => refresh_token);
-            status=200, headers=Dict("Set-Cookie" => join(cookies, "\nSet-Cookie: "))
+            Dict(
+                "access_token" => access_token,
+                "access_expires_in" => tryparse(Int, ENV["ACCESS_TOKEN_EXPIRES_SECONDS"]),
+                "refresh_token" => refresh_token,
+                "refresh_expires_in" tryparse(Int, ENV["REFRESH_TOKEN_EXPIRES_SECONDS"]),
+            ); status=200, headers=Dict("Set-Cookie" => join(cookies, "\nSet-Cookie: "))
         )
     catch e
         app_error = handle_exception(e)
@@ -72,7 +76,12 @@ function refresh()
             "account_name" => payload["account_name"]
         ))
         cookie = access_token_cookie_header(access_token)
-        return json_success(;status=200, headers=Dict("Set-Cookie" => cookie))
+        return json_success(
+            Dict(
+                "access_token" => access_token,
+                "expires_in" => tryparse(Int, ENV["ACCESS_TOKEN_EXPIRES_SECONDS"]),
+            ); status=200, headers=Dict("Set-Cookie" => cookie)
+        )
     catch e
         app_error = handle_exception(e)
         return json_fail(app_error)
