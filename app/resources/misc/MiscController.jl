@@ -9,7 +9,7 @@ export index
 
 function index(payload::Dict{String,Any})
     try
-        return html_success(:misc, :index, account_name=payload["account_name"])
+        return html_success(:misc, :index, name=payload["name"])
     catch e
         app_error = handle_exception(e)
         return html_fail(app_error)

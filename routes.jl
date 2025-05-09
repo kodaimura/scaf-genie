@@ -57,7 +57,7 @@ function with_web_auth(f::Function)
         isnothing(payload) && return redirect_login()
         access_token = create_access_token(Dict(
             "id" => payload["id"],
-            "account_name" => payload["account_name"]
+            "name" => payload["name"]
         ))
         payload = verify_access_token(access_token)
         isnothing(payload) && return redirect_login()

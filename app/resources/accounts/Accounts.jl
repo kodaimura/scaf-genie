@@ -8,8 +8,8 @@ export Account
 
 @kwdef mutable struct Account <: AbstractModel
     id::DbId = DbId()
-    account_name::String = ""
-    account_password::String = ""
+    name::String = ""
+    password::String = ""
     created_at::DateTime = now()
     updated_at::DateTime = now()
 end

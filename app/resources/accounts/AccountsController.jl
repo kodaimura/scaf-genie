@@ -18,11 +18,11 @@ export signup, login, logout, me
 function signup()
     request = Requests.jsonpayload()
     try
-        validate_account_signup(request)
-        account_name = request["account_name"]
-        account_password = request["account_password"]
+        validate_signup(request)
+        name = request["name"]
+        password = request["password"]
 
-        AccountsService.signup(account_name, account_password)
+        AccountsService.signup(name, password)
         return json_success(; status=201)
     catch e
         app_error = handle_exception(e)
@@ -33,20 +33,20 @@ end
 function login()
     request = Requests.jsonpayload()
     try
-        validate_account_login(request)
-        account_name = request["account_name"]
-        account_password = request["account_password"]
+        validate_login(request)
+        name = request["name"]
+        password = request["password"]
 
-        account = AccountsService.login(account_name, account_password)
+        account = AccountsService.login(name, password)
         isnothing(account) && throw(UnauthorizedError())
 
         access_token = Jwt.create_access_token(Dict(
             "id" => account.id.value, 
-            "account_name" => account.account_name
+            "name" => account.name
         ))
         refresh_token = Jwt.create_refresh_token(Dict(
             "id" => account.id.value, 
-            "account_name" => account.account_name
+            "name" => account.name
         ))
         cookies = [
             access_token_cookie_header(access_token),
@@ -73,7 +73,7 @@ function refresh()
 
         access_token = Jwt.create_access_token(Dict(
             "id" => payload["id"],
-            "account_name" => payload["account_name"]
+            "name" => payload["name"]
         ))
         cookie = access_token_cookie_header(access_token)
         return json_success(
@@ -105,7 +105,7 @@ function me(payload::Dict{String,Any})
     try
         return json_success(Dict(
             "id" => payload["id"],
-            "account_name" => payload["account_name"]
+            "name" => payload["name"]
         ))
     catch e
         app_error = handle_exception(e)

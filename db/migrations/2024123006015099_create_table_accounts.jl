@@ -6,8 +6,8 @@ function up()
     create_table(:accounts) do
         [
             pk()
-            column("account_name", :string, "UNIQUE", limit=255, not_null=true)
-            column("account_password", :string, limit=255, not_null=true)
+            column("name", :string, "UNIQUE", limit=255, not_null=true)
+            column("password", :string, limit=255, not_null=true)
             column("created_at", :timestamp, not_null=true)
             column("updated_at", :timestamp, not_null=true)
         ]
