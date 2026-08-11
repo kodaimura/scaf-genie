@@ -19,10 +19,10 @@ prod:
   config:
 
 test:
-  adapter:
-  database:
-  host:
-  username:
-  password:
-  port:
+  adapter: PostgreSQL
+  database: project_db
+  host: db
+  username: postgres
+  password: postgres
+  port: 5432
   config:

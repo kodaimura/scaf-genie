@@ -10,15 +10,19 @@ export authenticated,
     is_authenticated, 
     refreshable,
     is_refreshable,
-    access_token_cookie_header,
-    refresh_token_cookie_header
+    refresh_token_cookie_header,
+    delete_refresh_token_cookie_header
 
 # Verifies the access token and returns user data if valid, or nothing if invalid.
 function authenticated()::Union{Dict{String,Any},Nothing}
-    token = get_cookie("access_token")
+    token = get_bearer_token()
     isnothing(token) && return nothing
     try
-        return Jwt.verify_access_token(token)
+        payload = Jwt.verify_access_token(token)
+        if isnothing(payload) || Base.get(payload, "type", "") != "access"
+            return nothing
+        end
+        return payload
     catch e
         return nothing
     end
@@ -34,7 +38,11 @@ function refreshable()::Union{Dict{String,Any},Nothing}
     token = get_cookie("refresh_token")
     isnothing(token) && return nothing
     try
-        return Jwt.verify_refresh_token(token)
+        payload = Jwt.verify_refresh_token(token)
+        if isnothing(payload) || Base.get(payload, "type", "") != "refresh"
+            return nothing
+        end
+        return payload
     catch e
         return nothing
     end
@@ -45,16 +53,29 @@ function is_refreshable()::Bool
     return !isnothing(refreshable())
 end
 
-function access_token_cookie_header(access_token::String; options::String = "")::String
-    secure = tryparse(Bool, get(ENV, "COOKIE_ACCESS_SECURE", "true")) ? "Secure" : ""
-    httponly = tryparse(Bool, get(ENV, "COOKIE_ACCESS_HTTPONLY", "true")) ? "HttpOnly" : ""
-    return "access_token=$access_token; Path=/; $secure; $httponly; SameSite=Lax; $options"
+function refresh_token_cookie_header(refresh_token::String; options::String = "")::String
+    secure = Base.get(ENV, "APP_ENV", "dev") == "production" ? "Secure" : ""
+    httponly = "HttpOnly"
+    return "refresh_token=$refresh_token; Path=/; $secure; $httponly; SameSite=Lax; $options"
 end
 
-function refresh_token_cookie_header(refresh_token::String; options::String = "")::String
-    secure = tryparse(Bool, get(ENV, "COOKIE_REFRESH_SECURE", "true")) ? "Secure" : ""
-    httponly = tryparse(Bool, get(ENV, "COOKIE_REFRESH_HTTPONLY", "true")) ? "HttpOnly" : ""
-    return "refresh_token=$refresh_token; Path=/; $secure; $httponly; SameSite=Lax; $options"
+function delete_refresh_token_cookie_header()::String
+    return refresh_token_cookie_header("", options="Max-Age=0")
+end
+
+function get_bearer_token()
+    authorization = nothing
+    for (key, value) in Requests.request().headers
+        if lowercase(string(key)) == "authorization"
+            authorization = string(value)
+            break
+        end
+    end
+
+    isnothing(authorization) && return nothing
+    prefix = "Bearer "
+    startswith(authorization, prefix) || return nothing
+    return strip(authorization[length(prefix)+1:end])
 end
 
 function get_cookie(key::String)

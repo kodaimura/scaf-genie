@@ -14,6 +14,7 @@ export create_access_token,
 function create_access_token(payload::Dict{String,Any})::String
     expires_seconds = tryparse(Int, ENV["ACCESS_TOKEN_EXPIRES_SECONDS"])
     secret = ENV["ACCESS_TOKEN_SECRET"]
+    payload["type"] = "access"
     return create_token(payload, secret, expires_seconds)
 end
 
@@ -21,6 +22,7 @@ end
 function create_refresh_token(payload::Dict{String,Any})::String
     expires_seconds = tryparse(Int, ENV["REFRESH_TOKEN_EXPIRES_SECONDS"])
     secret = ENV["REFRESH_TOKEN_SECRET"]
+    payload["type"] = "refresh"
     return create_token(payload, secret, expires_seconds)
 end
 

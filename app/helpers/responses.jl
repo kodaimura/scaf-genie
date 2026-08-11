@@ -4,6 +4,7 @@ import Genie
 using ..Errors
 
 export json_success,
+    json_no_content,
     json_fail,
     json_badrequest,
     json_unauthorized,
@@ -20,6 +21,13 @@ function json_success(data::Dict=Dict(); status=200, headers=nothing)
         return Genie.Renderer.Json.json(data; status=status)
     end
     return Genie.Renderer.Json.json(data; status=status, headers=headers)
+end
+
+function json_no_content(; headers=nothing)
+    if isnothing(headers)
+        return Genie.Renderer.Json.json(Dict(); status=204)
+    end
+    return Genie.Renderer.Json.json(Dict(); status=204, headers=headers)
 end
 
 # Returns a JSON error response based on the given AppError.
