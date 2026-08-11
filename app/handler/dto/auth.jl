@@ -109,7 +109,7 @@ end
 function validate_verify_reset_password_token(request::Dict)
     validate_fields([
         req -> validate_require(req, "token"),
-        req -> validate_max_length(req, "token", 255),
+        req -> validate_max_length(req, "token", 500),
     ], request)
 end
 
@@ -117,7 +117,7 @@ function validate_reset_password(request::Dict)
     validate_fields([
         req -> validate_require(req, "token"),
         req -> validate_require(req, "new_password"),
-        req -> validate_max_length(req, "token", 255),
+        req -> validate_max_length(req, "token", 500),
         req -> validate_min_length(req, "new_password", 8),
         req -> validate_max_length(req, "new_password", 255),
     ], request)

@@ -9,6 +9,7 @@ include("app/handler/auth.jl")
 include("app/handler/accounts.jl")
 
 using ScafGenie.Auth
+using ScafGenie.Errors
 using ScafGenie.Exceptions
 using ScafGenie.Responses
 
@@ -72,41 +73,33 @@ route("/api/accounts/me", method="GET") do
     end
 end
 
-route("/api/accounts/:target_account_id/password", method="PUT") do
+route("/api/accounts/me/password", method="PUT") do
     with_api_auth() do account_id
-        return AuthHandler.update_password(account_id, string(params(:target_account_id)))
+        return AuthHandler.update_password(account_id)
     end
 end
 
 route("/api/accounts/:target_account_id/disable", method="PUT") do
     with_api_auth() do account_id
-        return AccountsHandler.disable(parse(Int, string(params(:target_account_id))))
+        return AccountsHandler.disable(parse_account_id_param())
     end
 end
 
 route("/api/accounts/:target_account_id/enable", method="PUT") do
     with_api_auth() do account_id
-        return AccountsHandler.enable(parse(Int, string(params(:target_account_id))))
+        return AccountsHandler.enable(parse_account_id_param())
     end
 end
 
 route("/api/accounts/:target_account_id", method="GET") do
     with_api_auth() do account_id
-        target_account_id = string(params(:target_account_id))
-        if target_account_id == "me"
-            return AccountsHandler.get_current(account_id)
-        end
-        return AccountsHandler.get(parse(Int, target_account_id))
+        return AccountsHandler.get(parse_account_id_param())
     end
 end
 
 route("/api/accounts/:target_account_id", method="PUT") do
     with_api_auth() do account_id
-        target_account_id = string(params(:target_account_id))
-        if target_account_id == "me"
-            return AccountsHandler.update(account_id)
-        end
-        return AccountsHandler.update(parse(Int, target_account_id))
+        return AccountsHandler.update(parse_account_id_param())
     end
 end
 
@@ -119,6 +112,12 @@ function with_api_auth(f::Function)
     catch e
         return json_fail(handle_exception(e))
     end
+end
+
+function parse_account_id_param()::Int
+    account_id = tryparse(Int, string(params(:target_account_id)))
+    isnothing(account_id) && throw(BadRequestError("BAD_REQUEST"))
+    return account_id
 end
 
 ###################################################################################################

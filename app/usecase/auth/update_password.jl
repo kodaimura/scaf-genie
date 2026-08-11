@@ -3,9 +3,7 @@ struct UpdatePasswordInput
     new_password::String
 end
 
-function update_password(account_id::Int, target_account_id::String, input::UpdatePasswordInput)::Nothing
-    target_account_id == "me" || throw(BadRequestError("INVALID_STATE"))
-
+function update_password(account_id::Int, input::UpdatePasswordInput)::Nothing
     account = AccountModule.get_by_id(account_id)
     isnothing(account) && throw(NotFoundError("ACCOUNT_NOT_FOUND"))
 

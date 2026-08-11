@@ -1,6 +1,6 @@
 module Validations
 
-import ..Errors: BadRequestError
+import ..Errors: ValidationError
 
 export validate_require,
     validate_min_length,
@@ -94,7 +94,8 @@ function validate_fields(validators::Vector{Function}, request::Dict)
         append!(errors, validator(request))
     end
     if !isempty(errors)
-        throw(BadRequestError(; details=errors))
+        details = [Dict{String,Any}("field" => error.first, "message" => error.second) for error in errors]
+        throw(ValidationError(; details=details))
     end
 end
 

@@ -62,12 +62,11 @@ function logout()
     end
 end
 
-function update_password(account_id::Int, target_account_id::String)
+function update_password(account_id::Int)
     try
         request = AuthDto.update_password_request(Requests.jsonpayload())
         AuthUsecase.update_password(
             account_id,
-            target_account_id,
             AuthUsecase.UpdatePasswordInput(request.old_password, request.new_password),
         )
         return json_no_content()
