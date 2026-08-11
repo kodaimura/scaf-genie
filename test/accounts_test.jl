@@ -1,8 +1,5 @@
-using Test, SearchLight, Main.UserApp, Main.UserApp.Accounts
+using Test, Main.ScafGenie
 
-@testset "Accounts unit tests" begin
-
-    ### Your tests here
+@testset "Application load" begin
     @test 1 == 1
-
 end;

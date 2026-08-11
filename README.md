@@ -1,51 +1,57 @@
+# scaf-genie-api
 
-# ScafGenieAPI
+Genie backend scaffold.
 
-https://github.com/kodaimura/scaf-genie の派生プロジェクトで、API開発に特化したテンプレートです。  
-認証系のAPIをデフォルトで実装しています。
+This template is intended to run through Docker. Local Julia and Node are not
+required for normal development.
+PostgreSQL is the supported database. The server stores and emits timestamps in
+UTC.
 
-### 必要なツール
-- **Docker**
-- **make**
+## Development
 
----
-
-## 🚀 使い方
-
-### インストール
-[webscaf](https://github.com/kodaimura/webscaf) を使って、簡単にセットアップできます。  
-Githubのテンプレート機能やcloneでも、そのまま利用できます。  
-
-### 起動
-以下のコマンドでデフォルトアプリを起動できます。
-
-```bash
+```sh
+cp .env.example .env
+make build
 make up
+make migrate
 ```
 
-ログイン・サインアップ機能付きの**Genie API**が立ち上がります。  
-http://localhost:8000/api
+Useful commands:
 
----
-
-## 🧰 コマンド一覧（Makefile）
-
-```bash
-make up        # コンテナの起動
-make down      # コンテナの停止と破棄
-make reup      # コンテナの停止、破棄、再起動
-make build     # コンテナの再ビルド
-make stop      # コンテナの停止のみ
-make in        # appコンテナ内にbashで入る
-make log       # コンテナのログを監視
-make ps        # コンテナの状態を確認
+```sh
+make logs
+make exec
+make shell
+make check
+make smoke
+make routes
+make migrate
+make down_volumes
 ```
 
-### 環境切り替え
+The API runs at `http://localhost:8000/api`.
+Health check is available at `http://localhost:8000/health`.
 
-異なる環境で動作させたい場合、`ENV`変数を指定してください。
-指定なしの場合は dev で起動します。
-```bash
-make up ENV=prod      # 本番環境で起動
-make up ENV=dev       # 開発環境で起動
+## Structure
+
+```text
+app/
+  handler/  # HTTP request/response handling
+  module/   # persistence-oriented domain modules
+  query/    # read/query-specific access
+  usecase/  # application use cases
+db/migrations/ # SearchLight migrations
 ```
+
+Use production compose settings with `ENV=prod`.
+
+```sh
+cp .env.example .env
+# Edit production secrets and database settings in .env.
+make build ENV=prod
+make migrate ENV=prod
+make up ENV=prod
+```
+
+The development database is stored in the Docker named volume
+`scaf-genie-api_db_data`.

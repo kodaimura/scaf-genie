@@ -1,17 +1,5 @@
-#!/bin/bash
+#!/bin/sh
 set -e
-
-if [ ! -f "/app/migration_initialized" ]; then
-  julia -e "using Pkg; 
-    Pkg.activate(\".\"); 
-    Pkg.instantiate();
-    using SearchLight, SearchLightPostgreSQL;
-    SearchLight.Configuration.load();
-    SearchLight.connect();
-    SearchLight.Migration.init();"
-    
-  touch /app/migration_initialized
-fi
 
 julia -e "
 using Pkg; 
@@ -20,6 +8,7 @@ Pkg.instantiate();
 using SearchLight, SearchLightPostgreSQL;
 SearchLight.Configuration.load();
 SearchLight.connect();
+SearchLight.query(\"CREATE TABLE IF NOT EXISTS schema_migrations (version varchar(30))\");
 SearchLight.Migration.up();
 "
 
