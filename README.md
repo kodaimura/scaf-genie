@@ -38,6 +38,7 @@ Set `MAILHOG_PORT` when that port is already in use.
 
 ```text
 app/
+  core/     # cross-cutting application primitives
   handler/  # HTTP request/response handling
   module/   # persistence-oriented domain modules
   query/    # read/query-specific access

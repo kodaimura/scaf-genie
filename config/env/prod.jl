@@ -11,9 +11,7 @@ Genie.Configuration.config!(
   format_html_output              = false,
 
   #Custom
-  path_lib                        = "app/libs",
-  path_helpers                    = "app/helpers",
-  autoload                        = [:initializers, :libs, :helpers, :resources, :plugins, :routes, :app],
+  autoload                        = [:initializers, :resources, :plugins, :routes, :app],
 )
 
 if Genie.config.server_handle_static_files
