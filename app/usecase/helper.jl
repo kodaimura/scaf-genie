@@ -2,10 +2,14 @@ module UsecaseHelper
 
 using ScafGenie.Errors
 import SHA
+import Random
+import Base64
 
 export resolve_login_id,
     hash_password,
-    verify_password
+    verify_password,
+    generate_token,
+    hash_token
 
 function resolve_login_id(login_id, email)::String
     mode = lowercase(strip(Base.get(ENV, "AUTH_LOGIN_ID_MODE", "email")))
@@ -33,6 +37,15 @@ end
 
 function verify_password(plain::String, hashed::String)::Bool
     return hash_password(plain) == hashed
+end
+
+function generate_token(byte_length::Int = 48)::String
+    raw = Random.rand(UInt8, byte_length)
+    return replace(Base64.base64encode(raw), "+" => "-", "/" => "_", "=" => "")
+end
+
+function hash_token(token::String)::String
+    return bytes2hex(SHA.sha256(token))
 end
 
 end

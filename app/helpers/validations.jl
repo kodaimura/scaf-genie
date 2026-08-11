@@ -34,12 +34,12 @@ function validate_email_format(request::Dict, field::String)
     value = string(Base.get(request, field, ""))
     isempty(value) && return []
     pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-    !ismatch(pattern, value) ? [(field => "must be a valid email")] : []
+    !occursin(pattern, value) ? [(field => "must be a valid email")] : []
 end
 
 function validate_matches_regex(request::Dict, field::String, pattern::Regex)
     value = Base.get(request, field, "")
-    !ismatch(pattern, value) ? [(field => "has invalid format")] : []
+    !occursin(pattern, value) ? [(field => "has invalid format")] : []
 end
 
 function validate_numeric(request::Dict, field::String)

@@ -54,9 +54,19 @@ function is_refreshable()::Bool
 end
 
 function refresh_token_cookie_header(refresh_token::String; options::String = "")::String
-    secure = Base.get(ENV, "APP_ENV", "dev") == "production" ? "Secure" : ""
-    httponly = "HttpOnly"
-    return "refresh_token=$refresh_token; Path=/; $secure; $httponly; SameSite=Lax; $options"
+    parts = [
+        "refresh_token=$refresh_token",
+        "Path=/",
+        "HttpOnly",
+        "SameSite=Lax",
+    ]
+    if Base.get(ENV, "APP_ENV", "dev") == "production"
+        push!(parts, "Secure")
+    end
+    if !isempty(strip(options))
+        push!(parts, strip(options))
+    end
+    return join(parts, "; ")
 end
 
 function delete_refresh_token_cookie_header()::String

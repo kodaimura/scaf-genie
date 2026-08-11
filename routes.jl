@@ -38,6 +38,18 @@ route("/api/auth/logout", method="POST") do
     return AuthHandler.logout()
 end
 
+route("/api/auth/forgot-password", method="POST") do
+    return AuthHandler.forgot_password()
+end
+
+route("/api/auth/reset-password/verify", method="GET") do
+    return AuthHandler.verify_reset_password_token()
+end
+
+route("/api/auth/reset-password", method="POST") do
+    return AuthHandler.reset_password()
+end
+
 route("/api/accounts", method="GET") do
     with_api_auth() do account_id
         return AccountsHandler.list()

@@ -31,6 +31,8 @@ make down_volumes
 
 The API runs at `http://localhost:8000/api`.
 Health check is available at `http://localhost:8000/health`.
+MailHog is available at `http://localhost:8025` by default.
+Set `MAILHOG_PORT` when that port is already in use.
 
 ## Structure
 

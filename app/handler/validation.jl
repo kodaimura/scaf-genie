@@ -4,6 +4,9 @@ using ScafGenie.Validations
 
 export validate_signup,
     validate_login,
+    validate_forgot_password,
+    validate_verify_reset_password_token,
+    validate_reset_password,
     validate_account,
     validate_update_account,
     validate_update_password
@@ -21,6 +24,31 @@ function validate_login(request::Dict)
     ], request)
 end
 
+function validate_forgot_password(request::Dict)
+    validate_fields([
+        req -> validate_require(req, "email"),
+        req -> validate_max_length(req, "email", 255),
+        req -> validate_email_format(req, "email"),
+    ], request)
+end
+
+function validate_verify_reset_password_token(request::Dict)
+    validate_fields([
+        req -> validate_require(req, "token"),
+        req -> validate_max_length(req, "token", 255),
+    ], request)
+end
+
+function validate_reset_password(request::Dict)
+    validate_fields([
+        req -> validate_require(req, "token"),
+        req -> validate_require(req, "new_password"),
+        req -> validate_max_length(req, "token", 255),
+        req -> validate_min_length(req, "new_password", 8),
+        req -> validate_max_length(req, "new_password", 255),
+    ], request)
+end
+
 function validate_account(request::Dict)
     validate_fields([
         req -> validate_require(req, "first_name"),
@@ -28,6 +56,7 @@ function validate_account(request::Dict)
         req -> validate_require(req, "password"),
         req -> validate_max_length(req, "login_id", 255),
         req -> validate_max_length(req, "email", 255),
+        req -> validate_email_format(req, "email"),
         req -> validate_max_length(req, "first_name", 100),
         req -> validate_max_length(req, "last_name", 100),
         req -> validate_min_length(req, "password", 8),
@@ -41,6 +70,7 @@ function validate_update_account(request::Dict)
         req -> validate_require(req, "last_name"),
         req -> validate_max_length(req, "login_id", 255),
         req -> validate_max_length(req, "email", 255),
+        req -> validate_email_format(req, "email"),
         req -> validate_max_length(req, "first_name", 100),
         req -> validate_max_length(req, "last_name", 100),
         req -> haskey(req, "password") && !isempty(string(req["password"])) ? validate_min_length(req, "password", 8) : [],

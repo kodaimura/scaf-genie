@@ -47,16 +47,16 @@ function get_by_id(account_id)::Union{Account,Nothing}
     return account
 end
 
-function get_by_email(email::String)::Union{Account,Nothing}
-    account = SearchLight.findone(Account, email=email)
+function get_by_email(email::AbstractString)::Union{Account,Nothing}
+    account = SearchLight.findone(Account, email=string(email))
     if isnothing(account) || !isnothing(account.deleted_at)
         return nothing
     end
     return account
 end
 
-function get_by_login_id(login_id::String)::Union{Account,Nothing}
-    account = SearchLight.findone(Account, login_id=login_id)
+function get_by_login_id(login_id::AbstractString)::Union{Account,Nothing}
+    account = SearchLight.findone(Account, login_id=string(login_id))
     if isnothing(account) || !isnothing(account.deleted_at)
         return nothing
     end
