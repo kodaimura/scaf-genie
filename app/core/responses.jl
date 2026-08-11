@@ -21,14 +21,18 @@ function json_success(data::Dict=Dict(); status=200, headers=nothing)
     if isnothing(headers)
         return Genie.Renderer.Json.json(data; status=status)
     end
-    return Genie.Renderer.Json.json(data; status=status, headers=headers)
+    return Genie.Renderer.Json.json(data; status=status, headers=normalize_headers(headers))
 end
 
 function json_no_content(; headers=nothing)
     if isnothing(headers)
         return HTTP.Response(204)
     end
-    return HTTP.Response(204, headers)
+    return HTTP.Response(204, normalize_headers(headers))
+end
+
+function normalize_headers(headers)::HTTP.Headers
+    return HTTP.mkheaders([string(key) => string(value) for (key, value) in headers])
 end
 
 # Returns a JSON error response based on the given AppError.

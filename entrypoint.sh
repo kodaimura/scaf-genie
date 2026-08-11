@@ -1,9 +1,8 @@
 #!/bin/sh
 set -e
 
-exec julia -e "
+exec julia --project=. -e "
 using Pkg;
-Pkg.activate(\".\");
 Pkg.instantiate();
 using Genie;
 Genie.loadapp();

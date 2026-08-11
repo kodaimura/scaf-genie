@@ -9,6 +9,7 @@ include("app/handler/auth.jl")
 include("app/handler/accounts.jl")
 
 using ScafGenie.Auth
+using ScafGenie.Cors
 using ScafGenie.Errors
 using ScafGenie.Exceptions
 using ScafGenie.Responses
@@ -17,11 +18,31 @@ import .AuthUsecase
 import .AuthHandler
 import .AccountsHandler
 
-frontend_origins = ScafGenie.Config.frontend_origins()
-Genie.config.cors_headers["Access-Control-Allow-Origin"] = first(frontend_origins)
-Genie.config.cors_headers["Access-Control-Allow-Credentials"] = "true"
-Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+setup_cors!()
+
+function register_cors_preflight(path::String)::Nothing
+    route(path, method="OPTIONS") do
+        return preflight_response()
+    end
+    return nothing
+end
+
+foreach(register_cors_preflight, [
+    "/health",
+    "/api/auth/signup",
+    "/api/auth/login",
+    "/api/auth/refresh",
+    "/api/auth/logout",
+    "/api/auth/forgot-password",
+    "/api/auth/reset-password/verify",
+    "/api/auth/reset-password",
+    "/api/accounts",
+    "/api/accounts/me",
+    "/api/accounts/me/password",
+    "/api/accounts/:target_account_id::Int#\\d+/disable",
+    "/api/accounts/:target_account_id::Int#\\d+/enable",
+    "/api/accounts/:target_account_id::Int#\\d+",
+])
 
 route("/health") do
     return json_success(Dict("status" => "ok"))
