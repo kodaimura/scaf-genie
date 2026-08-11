@@ -1,9 +1,11 @@
 module Responses
 
 import Genie
+import HTTP
 using ..Errors
 
 export json_success,
+    json_no_content,
     json_fail,
     json_badrequest,
     json_unauthorized,
@@ -19,7 +21,18 @@ function json_success(data::Dict=Dict(); status=200, headers=nothing)
     if isnothing(headers)
         return Genie.Renderer.Json.json(data; status=status)
     end
-    return Genie.Renderer.Json.json(data; status=status, headers=headers)
+    return Genie.Renderer.Json.json(data; status=status, headers=normalize_headers(headers))
+end
+
+function json_no_content(; headers=nothing)
+    if isnothing(headers)
+        return HTTP.Response(204)
+    end
+    return HTTP.Response(204, normalize_headers(headers))
+end
+
+function normalize_headers(headers)::HTTP.Headers
+    return HTTP.mkheaders([string(key) => string(value) for (key, value) in headers])
 end
 
 # Returns a JSON error response based on the given AppError.
@@ -28,8 +41,24 @@ function json_fail(e::AppError; status=nothing, message=nothing, details=nothing
     status = isnothing(status) ? get_code(e) : status
     message = isnothing(message) ? get_message(e) : message
     details = isnothing(details) ? get_details(e) : details
+    if e isa ValidationError
+        return Genie.Renderer.Json.json(
+            Dict("message" => message, "errors" => details);
+            status=status,
+        )
+    end
+    if e isa UnexpectedError
+        return Genie.Renderer.Json.json(
+            Dict("message" => "Internal server error");
+            status=status,
+        )
+    end
+    data = Dict{String,Any}("code" => message)
+    if !isempty(details)
+        data["details"] = details
+    end
     return Genie.Renderer.Json.json(
-        Dict("message" => message, "details" => details);
+        data;
         status=status,
     )
 end

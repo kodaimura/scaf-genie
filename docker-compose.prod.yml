@@ -3,12 +3,55 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    volumes:
-      - .:/app
+      args:
+        JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
+    init: true
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${API_BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - GENIE_ENV=prod
+      - APP_ENV=${APP_ENV:-production}
+      - GENIE_ENV=${GENIE_ENV:-prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "julia",
+          "--project=.",
+          "-e",
+          "using HTTP; HTTP.get(\"http://127.0.0.1:8000/health\"; status_exception=true)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     working_dir: /app
     command: [ "./entrypoint.sh" ]
     tty: true
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
+    init: true
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - GENIE_ENV=${GENIE_ENV:-prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    working_dir: /app
+    command:
+      [
+        "julia",
+        "--project=.",
+        "-e",
+        "using Pkg; Pkg.instantiate(); using Genie; Genie.loadapp(); using SearchLight; SearchLight.query(\"CREATE TABLE IF NOT EXISTS schema_migrations (version varchar(30))\"); SearchLight.Migration.all_up!!()",
+      ]
+    restart: "no"

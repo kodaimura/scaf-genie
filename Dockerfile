@@ -1,7 +1,17 @@
-FROM julia:1.11
+ARG JULIA_VERSION=1.12.6
+FROM julia:${JULIA_VERSION}
 
 WORKDIR /app
 
-RUN apt-get update \
-  && apt-get install -y logrotate \
-  && rm -rf /var/lib/apt/lists/*
+ENV TZ=UTC
+ENV JULIA_PROJECT=/app
+
+COPY Project.toml Manifest.toml ./
+RUN julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+
+COPY . .
+RUN chmod +x ./entrypoint.sh
+
+EXPOSE 8000
+
+CMD ["./entrypoint.sh"]

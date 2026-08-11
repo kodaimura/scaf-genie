@@ -5,23 +5,33 @@
 # If you want to selectively run tests, use `$ julia --project runtests.jl test_file_1 test_file_2`
 
 ENV["GENIE_ENV"] = "test"
-push!(LOAD_PATH, abspath(normpath(joinpath("..", "src"))))
 
-cd("..")
+const TEST_DIR = @__DIR__
+const APP_DIR = normpath(joinpath(TEST_DIR, ".."))
+
+push!(LOAD_PATH, abspath(normpath(joinpath(APP_DIR, "src"))))
+
+cd(APP_DIR)
 using Pkg
-Pkg.activate(".")
+Pkg.activate(APP_DIR)
 
 using Genie
 Genie.loadapp()
 
-cd(@__DIR__)
-Pkg.activate(".")
+cd(TEST_DIR)
+Pkg.activate(TEST_DIR)
 
 # !!! Main.UserApp is configured as an alias for Main.ScafGenie and you might encounter it in some tests
-using Main.ScafGenie, Test, TestSetExtensions, Logging
+using Main.ScafGenie, Test, Logging
 
 Logging.global_logger(NullLogger())
 
-@testset ExtendedTestSet "ScafGenie tests" begin
-    @includetests ARGS
+@testset "ScafGenie tests" begin
+    test_files = isempty(ARGS) ?
+        filter(file -> endswith(file, ".jl") && file != "runtests.jl", readdir(TEST_DIR)) :
+        ARGS
+
+    for file in test_files
+        include(joinpath(TEST_DIR, file))
+    end
 end

@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+.DS_Store
+.cache
+.julia
+data
+db/*.sqlite
+*.db
+*.sqlite3
+log/*
+sessions/*
+cache/*
+build/*
+migration_initialized

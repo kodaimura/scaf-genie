@@ -1,6 +1,6 @@
 module Validations
 
-import ..Errors: BadRequestError
+import ..Errors: ValidationError
 
 export validate_require,
     validate_min_length,
@@ -16,32 +16,42 @@ export validate_require,
     validate_fields
 
 function validate_require(request::Dict, field::String)
-    (!haskey(request, field) || isempty(request[field])) ? (key => "is required") : []
+    value = Base.get(request, field, nothing)
+    (isnothing(value) || isempty(strip(string(value)))) ? [(field => "is required")] : []
 end
 
 function validate_min_length(request::Dict, field::String, min::Int)
-    value = get(request, field, "")
+    raw = Base.get(request, field, nothing)
+    isnothing(raw) && return []
+    value = string(raw)
+    isempty(value) && return []
     length(value) < min ? [(field => "must be at least $min characters")] : []
 end
 
 function validate_max_length(request::Dict, field::String, max::Int)
-    value = get(request, field, "")
+    raw = Base.get(request, field, nothing)
+    isnothing(raw) && return []
+    value = string(raw)
+    isempty(value) && return []
     length(value) > max ? [(field => "must be at most $max characters")] : []
 end
 
 function validate_email_format(request::Dict, field::String)
-    value = get(request, field, "")
+    raw = Base.get(request, field, nothing)
+    isnothing(raw) && return []
+    value = string(raw)
+    isempty(value) && return []
     pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-    !ismatch(pattern, value) ? [(field => "must be a valid email")] : []
+    !occursin(pattern, value) ? [(field => "must be a valid email")] : []
 end
 
 function validate_matches_regex(request::Dict, field::String, pattern::Regex)
-    value = get(request, field, "")
-    !ismatch(pattern, value) ? [(field => "has invalid format")] : []
+    value = Base.get(request, field, "")
+    !occursin(pattern, value) ? [(field => "has invalid format")] : []
 end
 
 function validate_numeric(request::Dict, field::String)
-    value = get(request, field, "")
+    value = Base.get(request, field, "")
     try
         parse(Float64, value)
         return []
@@ -51,7 +61,7 @@ function validate_numeric(request::Dict, field::String)
 end
 
 function validate_integer(request::Dict, field::String)
-    value = get(request, field, "")
+    value = Base.get(request, field, "")
     try
         parse(Int, value)
         return []
@@ -61,7 +71,7 @@ function validate_integer(request::Dict, field::String)
 end
 
 function validate_positive(request::Dict, field::String)
-    value = get(request, field, 0)
+    value = Base.get(request, field, 0)
     try
         parsed = parse(Float64, value)
         parsed <= 0 ? [(field => "must be positive")] : []
@@ -72,17 +82,17 @@ function validate_positive(request::Dict, field::String)
 end
 
 function validate_in_set(request::Dict, field::String, allowed::Vector)
-    value = get(request, field, "")
+    value = Base.get(request, field, "")
     !(value in allowed) ? [(field => "must be one of: $(join(allowed, ", "))")] : []
 end
 
 function validate_equals(request::Dict, field::String, expected)
-    value = get(request, field, "")
+    value = Base.get(request, field, "")
     value != expected ? [(field => "must be equal to $expected")] : []
 end
 
 function validate_not_equals(request::Dict, field::String, unexpected)
-    value = get(request, field, "")
+    value = Base.get(request, field, "")
     value == unexpected ? [(field => "must not be $unexpected")] : []
 end
 
@@ -92,7 +102,8 @@ function validate_fields(validators::Vector{Function}, request::Dict)
         append!(errors, validator(request))
     end
     if !isempty(errors)
-        throw(BadRequestError(; details=errors))
+        details = [Dict{String,Any}("field" => error.first, "message" => error.second) for error in errors]
+        throw(ValidationError(; details=details))
     end
 end
 

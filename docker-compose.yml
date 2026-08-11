@@ -3,32 +3,115 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
+    init: true
     volumes:
       - .:/app
+      - julia_depot:/root/.julia
     ports:
-      - "8000:8000"
+      - "${API_BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - GENIE_ENV=dev
-      - ACCESS_TOKEN_SECRET=randomstring
-      - ACCESS_TOKEN_EXPIRES_SECONDS=900
-      - REFRESH_TOKEN_SECRET=randomstring
-      - REFRESH_TOKEN_EXPIRES_SECONDS=86400
-      - COOKIE_ACCESS_SECURE=false
-      - COOKIE_REFRESH_SECURE=false
-      - COOKIE_ACCESS_HTTPONLY=true
-      - COOKIE_REFRESH_HTTPONLY=true
-      - FRONTEND_ORIGIN=http://localhost:3000
+      - APP_ENV=${APP_ENV:-dev}
+      - GENIE_ENV=${GENIE_ENV:-dev}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/project_db?sslmode=disable}
+      - ENABLE_SIGNUP=${ENABLE_SIGNUP:-true}
+      - AUTH_LOGIN_ID_MODE=${AUTH_LOGIN_ID_MODE:-email}
+      - FRONTEND_ORIGINS=${FRONTEND_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET:-randomstring}
+      - ACCESS_TOKEN_EXPIRES_SECONDS=${ACCESS_TOKEN_EXPIRES_SECONDS:-900}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:-randomstring}
+      - REFRESH_TOKEN_EXPIRES_SECONDS=${REFRESH_TOKEN_EXPIRES_SECONDS:-43200}
+      - REFRESH_TOKEN_REMEMBER_ME_EXPIRES_SECONDS=${REFRESH_TOKEN_REMEMBER_ME_EXPIRES_SECONDS:-2592000}
+      - PASSWORD_RESET_URL_BASE=${PASSWORD_RESET_URL_BASE:-http://localhost:3000/reset-password}
+      - PASSWORD_RESET_TOKEN_EXPIRES_MINUTES=${PASSWORD_RESET_TOKEN_EXPIRES_MINUTES:-30}
+      - PASSWORD_RESET_RESEND_INTERVAL_MINUTES=${PASSWORD_RESET_RESEND_INTERVAL_MINUTES:-5}
+      - MAIL_PROVIDER=${MAIL_PROVIDER:-mailhog}
+      - MAIL_FROM=${MAIL_FROM:-no-reply@example.local}
+      - SMTP_HOST=${SMTP_HOST:-mailhog}
+      - SMTP_PORT=${SMTP_PORT:-1025}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-false}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "julia",
+          "--project=.",
+          "-e",
+          "using HTTP; HTTP.get(\"http://127.0.0.1:8000/health\"; status_exception=true)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     working_dir: /app
     command: [ "./entrypoint.sh" ]
     tty: true
 
-  db:
-    image: postgres:17.4
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
+    init: true
+    profiles:
+      - tools
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - .:/app
+      - julia_depot:/root/.julia
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - POSTGRES_DB=project_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - APP_ENV=${APP_ENV:-dev}
+      - GENIE_ENV=${GENIE_ENV:-dev}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/project_db?sslmode=disable}
+    working_dir: /app
+    command:
+      [
+        "julia",
+        "--project=.",
+        "-e",
+        "using Pkg; Pkg.instantiate(); using Genie; Genie.loadapp(); using SearchLight; SearchLight.query(\"CREATE TABLE IF NOT EXISTS schema_migrations (version varchar(30))\"); SearchLight.Migration.all_up!!()",
+      ]
+    restart: "no"
+
+  db:
+    image: postgres:${POSTGRES_VERSION:-17.10}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-project_db}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - TZ=UTC
+      - PGTZ=UTC
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    platform: linux/amd64
+    ports:
+      - "${MAILHOG_BIND_HOST:-127.0.0.1}:${MAILHOG_PORT:-8025}:8025"
+
+volumes:
+  db_data:
+  julia_depot:

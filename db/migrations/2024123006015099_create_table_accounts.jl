@@ -1,21 +1,27 @@
 module CreateTableAccounts
 
-import SearchLight.Migrations: create_table, column, columns, pk, add_index, drop_table, add_indices
+import SearchLight
 
 function up()
-    create_table(:accounts) do
-        [
-            pk()
-            column("name", :string, "UNIQUE", limit=255, not_null=true)
-            column("password", :string, limit=255, not_null=true)
-            column("created_at", :timestamp, not_null=true)
-            column("updated_at", :timestamp, not_null=true)
-        ]
-    end
+    SearchLight.query("""
+    CREATE TABLE IF NOT EXISTS account (
+        id BIGSERIAL PRIMARY KEY,
+        email TEXT UNIQUE,
+        login_id TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        token_version INTEGER NOT NULL DEFAULT 1,
+        first_name VARCHAR(100) NOT NULL,
+        last_name VARCHAR(100) NOT NULL,
+        disabled_at TIMESTAMPTZ NULL,
+        deleted_at TIMESTAMPTZ NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 end
 
 function down()
-    drop_table(:accounts)
+    SearchLight.query("DROP TABLE IF EXISTS account")
 end
 
 end

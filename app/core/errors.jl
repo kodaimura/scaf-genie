@@ -4,6 +4,7 @@ export AppError,
     ExpectedError,
     UnexpectedError,
     BadRequestError,
+    ValidationError,
     UnauthorizedError,
     ForbiddenError,
     NotFoundError,
@@ -24,6 +25,13 @@ mutable struct BadRequestError <: ExpectedError
     details::Vector{Pair{String,String}}
     BadRequestError(msg::String = "Bad Request"; details = Pair{String,String}[]) =
         new(400, msg, details)
+end
+
+mutable struct ValidationError <: ExpectedError
+    code::Int
+    message::String
+    details::Vector{Dict{String,Any}}
+    ValidationError(; details = Dict{String,Any}[]) = new(422, "Validation error", details)
 end
 
 mutable struct UnauthorizedError <: ExpectedError
@@ -79,7 +87,7 @@ function get_message(e::Exception)
 end
 
 function get_details(e::Exception)
-    if e isa BadRequestError
+    if hasproperty(e, :details)
         return e.details
     else
         return []

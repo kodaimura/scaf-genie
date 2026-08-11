@@ -1,45 +1,144 @@
 using Genie.Router
 using Genie.Renderer
 
+include("app/usecase/auth/usecase.jl")
+include("app/usecase/accounts/usecase.jl")
+include("app/handler/dto/auth.jl")
+include("app/handler/dto/accounts.jl")
+include("app/handler/auth.jl")
+include("app/handler/accounts.jl")
+
 using ScafGenie.Auth
+using ScafGenie.Cors
+using ScafGenie.Errors
+using ScafGenie.Exceptions
 using ScafGenie.Responses
 
-frontend_origin = get(ENV, "FRONTEND_ORIGIN", "http://localhost:3000")
-Genie.config.cors_headers["Access-Control-Allow-Origin"] = frontend_origin
-Genie.config.cors_headers["Access-Control-Allow-Credentials"] = "true"
-Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+import .AuthUsecase
+import .AuthHandler
+import .AccountsHandler
 
-route("/api/accounts/login", method="POST") do
-    return AccountsController.login()
+setup_cors!()
+
+function register_cors_preflight(path::String)::Nothing
+    route(path, method="OPTIONS") do
+        return preflight_response()
+    end
+    return nothing
 end
 
-route("/api/accounts/logout", method="POST") do
-    return AccountsController.logout()
+foreach(register_cors_preflight, [
+    "/health",
+    "/api/auth/signup",
+    "/api/auth/login",
+    "/api/auth/refresh",
+    "/api/auth/logout",
+    "/api/auth/forgot-password",
+    "/api/auth/reset-password/verify",
+    "/api/auth/reset-password",
+    "/api/accounts",
+    "/api/accounts/me",
+    "/api/accounts/me/password",
+    "/api/accounts/:target_account_id::Int#\\d+/disable",
+    "/api/accounts/:target_account_id::Int#\\d+/enable",
+    "/api/accounts/:target_account_id::Int#\\d+",
+])
+
+route("/health") do
+    return json_success(Dict("status" => "ok"))
 end
 
-route("/api/accounts/signup", method="POST") do
-    return AccountsController.signup()
+route("/api/auth/signup", method="POST") do
+    return AuthHandler.signup()
 end
 
-route("/api/accounts/refresh", method="POST") do
-    return AccountsController.refresh()
+route("/api/auth/login", method="POST") do
+    return AuthHandler.login()
 end
 
-route("/api/accounts/me") do
-    with_api_auth() do payload
-        return AccountsController.me(payload)
+route("/api/auth/refresh", method="POST") do
+    return AuthHandler.refresh()
+end
+
+route("/api/auth/logout", method="POST") do
+    return AuthHandler.logout()
+end
+
+route("/api/auth/forgot-password", method="POST") do
+    return AuthHandler.forgot_password()
+end
+
+route("/api/auth/reset-password/verify", method="GET") do
+    return AuthHandler.verify_reset_password_token()
+end
+
+route("/api/auth/reset-password", method="POST") do
+    return AuthHandler.reset_password()
+end
+
+route("/api/accounts", method="GET") do
+    with_api_auth() do account_id
+        return AccountsHandler.list()
+    end
+end
+
+route("/api/accounts", method="POST") do
+    with_api_auth() do account_id
+        return AccountsHandler.create()
+    end
+end
+
+route("/api/accounts/me", method="GET") do
+    with_api_auth() do account_id
+        return AccountsHandler.get_current(account_id)
+    end
+end
+
+route("/api/accounts/me/password", method="PUT") do
+    with_api_auth() do account_id
+        return AuthHandler.update_password(account_id)
+    end
+end
+
+route("/api/accounts/:target_account_id::Int#\\d+/disable", method="PUT") do
+    with_api_auth() do account_id
+        return AccountsHandler.disable(parse_account_id_param())
+    end
+end
+
+route("/api/accounts/:target_account_id::Int#\\d+/enable", method="PUT") do
+    with_api_auth() do account_id
+        return AccountsHandler.enable(parse_account_id_param())
+    end
+end
+
+route("/api/accounts/:target_account_id::Int#\\d+", method="GET") do
+    with_api_auth() do account_id
+        return AccountsHandler.get(parse_account_id_param())
+    end
+end
+
+route("/api/accounts/:target_account_id::Int#\\d+", method="PUT") do
+    with_api_auth() do account_id
+        return AccountsHandler.update(parse_account_id_param())
     end
 end
 
 ###################################################################################################
 
 function with_api_auth(f::Function)
-    payload = authenticated()
-    if isnothing(payload)
-        return json_unauthorized()
+    try
+        account_id = AuthUsecase.validate_access_token_account(required_access_payload())
+        return f(account_id)
+    catch e
+        return json_fail(handle_exception(e))
     end
-    return f(payload)
+end
+
+function parse_account_id_param()::Int
+    account_id = tryparse(Int, string(params(:target_account_id)))
+    isnothing(account_id) && throw(BadRequestError("BAD_REQUEST"))
+    return account_id
 end
 
 ###################################################################################################

@@ -1,51 +1,82 @@
+# scaf-genie-api
 
-# ScafGenieAPI
+Genie backend scaffold.
 
-https://github.com/kodaimura/scaf-genie の派生プロジェクトで、API開発に特化したテンプレートです。  
-認証系のAPIをデフォルトで実装しています。
+This template is intended to run through Docker. Local Julia and Node are not
+required for normal development.
+PostgreSQL is the supported database. The server stores and emits timestamps in
+UTC.
 
-### 必要なツール
-- **Docker**
-- **make**
+Default runtime versions:
 
----
+- Julia 1.12.6
+- Genie 6.0.x
+- PostgreSQL 17.10
 
-## 🚀 使い方
+## Development
 
-### インストール
-[webscaf](https://github.com/kodaimura/webscaf) を使って、簡単にセットアップできます。  
-Githubのテンプレート機能やcloneでも、そのまま利用できます。  
-
-### 起動
-以下のコマンドでデフォルトアプリを起動できます。
-
-```bash
+```sh
+cp .env.example .env
+make build
 make up
+make migrate
 ```
 
-ログイン・サインアップ機能付きの**Genie API**が立ち上がります。  
-http://localhost:8000/api
+Useful commands:
 
----
-
-## 🧰 コマンド一覧（Makefile）
-
-```bash
-make up        # コンテナの起動
-make down      # コンテナの停止と破棄
-make reup      # コンテナの停止、破棄、再起動
-make build     # コンテナの再ビルド
-make stop      # コンテナの停止のみ
-make in        # appコンテナ内にbashで入る
-make log       # コンテナのログを監視
-make ps        # コンテナの状態を確認
+```sh
+make logs
+make exec
+make shell
+make check
+make test
+make smoke
+make routes
+make versions
+make migrate
+make down_volumes
 ```
 
-### 環境切り替え
+The API runs at `http://localhost:8000/api`.
+Health check is available at `http://localhost:8000/health`.
+MailHog is available at `http://localhost:8025` by default.
+Set `MAILHOG_PORT` when that port is already in use.
+Set `API_PORT` when `8000` is already in use.
+Host ports are bound to `127.0.0.1` by default. Set `API_BIND_HOST=0.0.0.0`
+only when the API must be reachable from outside the host.
 
-異なる環境で動作させたい場合、`ENV`変数を指定してください。
-指定なしの場合は dev で起動します。
-```bash
-make up ENV=prod      # 本番環境で起動
-make up ENV=dev       # 開発環境で起動
+The dev compose file bind-mounts the repository into the API container, so
+source changes are reflected without rebuilding the image. Rebuild when
+`Project.toml`, `Manifest.toml`, or Docker metadata changes.
+
+## Structure
+
+```text
+app/
+  core/     # cross-cutting application primitives
+  handler/  # HTTP request/response handling
+  module/   # persistence-oriented domain modules
+  query/    # read/query-specific access
+  usecase/  # application use cases
+db/migrations/ # SearchLight migrations
 ```
+
+Use production compose settings with `ENV=prod`. The production compose file
+runs from the built image instead of bind-mounting the repository.
+
+```sh
+cp .env.example .env
+# Edit production secrets and database settings in .env.
+make build ENV=prod
+make migrate ENV=prod
+make up ENV=prod
+```
+
+`Manifest.toml` is tracked so Docker builds resolve the same Julia package
+versions by default. Update it intentionally when upgrading dependencies.
+
+The development database is stored in the Docker named volume
+`scaf-genie-api_db_data`.
+If PostgreSQL image versions are upgraded on an existing local volume and a
+collation warning appears, recreate the dev volume with `make down_volumes`
+before running `make migrate` again.

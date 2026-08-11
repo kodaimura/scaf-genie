@@ -1,13 +1,7 @@
 using SearchLight
+using SearchLightPostgreSQL
 using Genie
+using ScafGenie.Config
 
-function Genie.Renderer.Json.JSON3.StructTypes.StructType(::Type{T}) where {T<:SearchLight.AbstractModel}
-  Genie.Renderer.Json.JSON3.StructTypes.Struct()
-end
-
-function Genie.Renderer.Json.JSON3.StructTypes.StructType(::Type{SearchLight.DbId})
-  Genie.Renderer.Json.JSON3.StructTypes.Struct()
-end
-
-SearchLight.Configuration.load(context = @__MODULE__)
-SearchLight.connect()
+SearchLight.config.db_config_settings = Config.database_settings()
+SearchLight.connect(SearchLight.config.db_config_settings)

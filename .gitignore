@@ -6,8 +6,9 @@ docs/build
 log/*
 sessions/*
 !*.gitkeep
-Manifest.toml
-.env
+.julia/
+.coverage
+coverage/
 
 # Vagrant
 .vagrant
@@ -47,6 +48,8 @@ db/*.sqlite
 
 # environment variables file
 .env
+.env.local
+.env.*.local
 
 # customization
 data
