@@ -1,4 +1,6 @@
 function create(input::Dict)::Account
+    UsecaseValidation.validate_account(input)
+
     login_id = resolve_login_id(Base.get(input, "login_id", nothing), Base.get(input, "email", nothing))
     ensure_unique_login_id(login_id, 0)
     ensure_unique_email(Base.get(input, "email", nothing), 0)

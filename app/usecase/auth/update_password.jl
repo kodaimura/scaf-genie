@@ -1,4 +1,7 @@
-function update_password(account_id::Int, input::Dict)::Nothing
+function update_password(account_id::Int, target_account_id::String, input::Dict)::Nothing
+    target_account_id == "me" || throw(BadRequestError("INVALID_STATE"))
+    UsecaseValidation.validate_update_password(input)
+
     account = AccountModule.get_by_id(account_id)
     isnothing(account) && throw(NotFoundError("ACCOUNT_NOT_FOUND"))
 

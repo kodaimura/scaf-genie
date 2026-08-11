@@ -1,4 +1,6 @@
 function update(account_id::Int, input::Dict)::Account
+    UsecaseValidation.validate_update_account(input)
+
     account = get(account_id)
     login_id = resolve_login_id(Base.get(input, "login_id", nothing), Base.get(input, "email", nothing))
     ensure_unique_login_id(login_id, account.id.value)

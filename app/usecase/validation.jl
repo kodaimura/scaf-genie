@@ -1,4 +1,4 @@
-module HandlerValidation
+module UsecaseValidation
 
 using ScafGenie.Validations
 

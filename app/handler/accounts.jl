@@ -1,12 +1,8 @@
 module AccountsHandler
 
-include("../usecase/accounts/usecase.jl")
-include("validation.jl")
-
 import Genie.Requests as Requests
 
-using .AccountsUsecase
-using .HandlerValidation
+using ..AccountsUsecase
 using ScafGenie.Exceptions
 using ScafGenie.Responses
 
@@ -30,7 +26,6 @@ end
 function create()
     request = Requests.jsonpayload()
     try
-        validate_account(request)
         account = AccountsUsecase.create(request)
         return json_success(Dict("account" => AccountsUsecase.AccountModule.account_response(account)); status=201)
     catch e
@@ -59,7 +54,6 @@ end
 function update(target_account_id::Int)
     request = Requests.jsonpayload()
     try
-        validate_update_account(request)
         account = AccountsUsecase.update(target_account_id, request)
         return json_success(Dict("account" => AccountsUsecase.AccountModule.account_response(account)))
     catch e

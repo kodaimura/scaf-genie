@@ -1,14 +1,16 @@
 using Genie.Router
 using Genie.Renderer
 
+include("app/usecase/auth/usecase.jl")
+include("app/usecase/accounts/usecase.jl")
 include("app/handler/auth.jl")
 include("app/handler/accounts.jl")
 
 using ScafGenie.Auth
-using ScafGenie.Errors
 using ScafGenie.Exceptions
 using ScafGenie.Responses
 
+using .AuthUsecase
 using .AuthHandler
 using .AccountsHandler
 
@@ -70,9 +72,7 @@ end
 
 route("/api/accounts/:target_account_id/password", method="PUT") do
     with_api_auth() do account_id
-        target_account_id = string(params(:target_account_id))
-        target_account_id == "me" || throw(BadRequestError("INVALID_STATE"))
-        return AuthHandler.update_password(account_id)
+        return AuthHandler.update_password(account_id, string(params(:target_account_id)))
     end
 end
 
@@ -112,18 +112,7 @@ end
 
 function with_api_auth(f::Function)
     try
-        jwt_payload = authenticated()
-        isnothing(jwt_payload) && throw(UnauthorizedError("AUTH_MISSING"))
-
-        account_id = parse(Int, string(jwt_payload["sub"]))
-        account = AccountsHandler.AccountsUsecase.get_current(account_id)
-        if !isnothing(account.disabled_at)
-            throw(UnauthorizedError("ACCOUNT_DISABLED"))
-        end
-        if jwt_payload["token_version"] != account.token_version
-            throw(UnauthorizedError("AUTH_TOKEN_REVOKED"))
-        end
-
+        account_id = AuthUsecase.validate_access_token_account(authenticated())
         return f(account_id)
     catch e
         return json_fail(handle_exception(e))

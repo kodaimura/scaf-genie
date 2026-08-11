@@ -1,4 +1,7 @@
-function refresh(payload::Dict)::String
+function refresh(payload)::String
+    isnothing(payload) && throw(UnauthorizedError("REFRESH_INVALID"))
+    (!haskey(payload, "sub") || !haskey(payload, "token_version")) && throw(UnauthorizedError("AUTH_INVALID_PAYLOAD"))
+
     account_id = parse(Int, string(payload["sub"]))
     account = AccountModule.get_by_id(account_id)
     if isnothing(account)

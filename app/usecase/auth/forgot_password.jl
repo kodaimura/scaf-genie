@@ -1,4 +1,6 @@
 function forgot_password(input::Dict)::Nothing
+    UsecaseValidation.validate_forgot_password(input)
+
     email = strip(string(input["email"]))
     account = AccountModule.get_by_email(email)
     if isnothing(account) || !isnothing(account.disabled_at)

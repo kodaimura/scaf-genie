@@ -1,4 +1,7 @@
 function signup(input::Dict)::Account
+    UsecaseValidation.validate_signup(input)
+    Base.get(ENV, "ENABLE_SIGNUP", "true") == "true" || throw(ForbiddenError("FORBIDDEN"))
+
     login_id = resolve_login_id(Base.get(input, "login_id", nothing), Base.get(input, "email", nothing))
     ensure_unique_login_id(login_id)
     ensure_unique_email(Base.get(input, "email", nothing))

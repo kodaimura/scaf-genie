@@ -1,4 +1,6 @@
 function reset_password(input::Dict)::Nothing
+    UsecaseValidation.validate_reset_password(input)
+
     raw_token = string(input["token"])
     reset_token = PasswordResetTokenModule.get_by_hash(UsecaseHelper.hash_token(raw_token))
     validate_reset_token(reset_token)
