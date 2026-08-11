@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
+    init: true
     volumes:
       - .:/app
       - julia_depot:/root/.julia
@@ -59,6 +62,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
+    init: true
     profiles:
       - tools
     volumes:
@@ -85,7 +91,7 @@ services:
     restart: "no"
 
   db:
-    image: postgres:17.4
+    image: postgres:${POSTGRES_VERSION:-17.10}
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:

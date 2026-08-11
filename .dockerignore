@@ -1,7 +1,11 @@
 .git
 .gitignore
 .env
-Manifest.toml
+.env.*
+!.env.example
+.DS_Store
+.cache
+.julia
 data
 db/*.sqlite
 *.db
