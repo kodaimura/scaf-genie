@@ -10,7 +10,7 @@ services:
       - .:/app
       - julia_depot:/root/.julia
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "${API_BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -110,7 +110,7 @@ services:
     image: mailhog/mailhog:v1.0.1
     platform: linux/amd64
     ports:
-      - "${MAILHOG_PORT:-8025}:8025"
+      - "${MAILHOG_BIND_HOST:-127.0.0.1}:${MAILHOG_PORT:-8025}:8025"
 
 volumes:
   db_data:

@@ -42,6 +42,8 @@ Health check is available at `http://localhost:8000/health`.
 MailHog is available at `http://localhost:8025` by default.
 Set `MAILHOG_PORT` when that port is already in use.
 Set `API_PORT` when `8000` is already in use.
+Host ports are bound to `127.0.0.1` by default. Set `API_BIND_HOST=0.0.0.0`
+only when the API must be reachable from outside the host.
 
 The dev compose file bind-mounts the repository into the API container, so
 source changes are reflected without rebuilding the image. Rebuild when
