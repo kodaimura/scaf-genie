@@ -20,8 +20,8 @@ function validate_reset_token(token)::Nothing
     return nothing
 end
 
-function get_reset_token(input::Dict)::String
-    token = strip(string(Base.get(input, "token", "")))
+function get_reset_token(input::String)::String
+    token = strip(input)
     isempty(token) && throw(BadRequestError("TOKEN_INVALID"))
     return token
 end

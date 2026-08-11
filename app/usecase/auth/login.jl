@@ -1,8 +1,19 @@
-function login(input::Dict)::Tuple{Account,String,String,Int}
-    UsecaseValidation.validate_login(input)
+struct LoginInput
+    login_id::String
+    password::String
+    remember_me::Bool
+end
 
-    account = AccountModule.get_by_login_id(input["login_id"])
-    if isnothing(account) || !UsecaseHelper.verify_password(input["password"], account.password_hash)
+struct LoginResult
+    account::Account
+    access_token::String
+    refresh_token::String
+    refresh_token_max_age::Int
+end
+
+function login(input::LoginInput)::LoginResult
+    account = AccountModule.get_by_login_id(input.login_id)
+    if isnothing(account) || !UsecaseHelper.verify_password(input.password, account.password_hash)
         throw(UnauthorizedError("INVALID_CREDENTIALS"))
     end
     if !isnothing(account.disabled_at)
@@ -15,9 +26,8 @@ function login(input::Dict)::Tuple{Account,String,String,Int}
     )
     access_token = Jwt.create_access_token(copy(payload))
     refresh_token = Jwt.create_refresh_token(copy(payload))
-    remember_me = Base.get(input, "remember_me", false) == true
-    refresh_token_max_age = remember_me ?
+    refresh_token_max_age = input.remember_me ?
         parse(Int, Base.get(ENV, "REFRESH_TOKEN_REMEMBER_ME_EXPIRES_SECONDS", "2592000")) :
         parse(Int, Base.get(ENV, "REFRESH_TOKEN_EXPIRES_SECONDS", "43200"))
-    return account, access_token, refresh_token, refresh_token_max_age
+    return LoginResult(account, access_token, refresh_token, refresh_token_max_age)
 end

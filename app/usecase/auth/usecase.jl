@@ -3,12 +3,10 @@ module AuthUsecase
 include("../../module/account/module.jl")
 include("../../module/password_reset_token/module.jl")
 include("../helper.jl")
-include("../validation.jl")
 
 using .AccountModule
 using .PasswordResetTokenModule
 using .UsecaseHelper
-using .UsecaseValidation
 import Dates
 import HTTP
 using ScafGenie.Errors
@@ -16,13 +14,21 @@ using ScafGenie.Jwt
 using ScafGenie.Mailer
 
 export signup,
+    SignupInput,
     login,
+    LoginInput,
+    LoginResult,
     refresh,
+    RefreshResult,
     validate_access_token_account,
     update_password,
+    UpdatePasswordInput,
     forgot_password,
+    ForgotPasswordInput,
     verify_reset_password_token,
-    reset_password
+    VerifyResetPasswordTokenInput,
+    reset_password,
+    ResetPasswordInput
 
 include("helper.jl")
 include("signup.jl")

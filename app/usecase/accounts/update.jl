@@ -1,17 +1,23 @@
-function update(account_id::Int, input::Dict)::Account
-    UsecaseValidation.validate_update_account(input)
+struct UpdateAccountInput
+    login_id::Union{Nothing,String}
+    email::Union{Nothing,String}
+    password::Union{Nothing,String}
+    first_name::String
+    last_name::String
+end
 
+function update(account_id::Int, input::UpdateAccountInput)::Account
     account = get(account_id)
-    login_id = resolve_login_id(Base.get(input, "login_id", nothing), Base.get(input, "email", nothing))
+    login_id = resolve_login_id(input.login_id, input.email)
     ensure_unique_login_id(login_id, account.id.value)
-    ensure_unique_email(Base.get(input, "email", nothing), account.id.value)
+    ensure_unique_email(input.email, account.id.value)
 
     account.login_id = login_id
-    account.email = Base.get(input, "email", nothing)
-    account.first_name = input["first_name"]
-    account.last_name = input["last_name"]
-    if haskey(input, "password") && !isnothing(input["password"]) && !isempty(string(input["password"]))
-        account.password_hash = UsecaseHelper.hash_password(input["password"])
+    account.email = input.email
+    account.first_name = input.first_name
+    account.last_name = input.last_name
+    if !isnothing(input.password) && !isempty(input.password)
+        account.password_hash = UsecaseHelper.hash_password(input.password)
         account.token_version += 1
     end
 

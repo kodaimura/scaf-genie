@@ -2,18 +2,18 @@ module AccountsUsecase
 
 include("../../module/account/module.jl")
 include("../helper.jl")
-include("../validation.jl")
 
 using .AccountModule
 using .UsecaseHelper
-using .UsecaseValidation
 using ScafGenie.Errors
 
 export list,
     get,
     get_current,
     create,
+    CreateAccountInput,
     update,
+    UpdateAccountInput,
     disable,
     enable
 

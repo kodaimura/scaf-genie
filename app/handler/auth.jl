@@ -3,6 +3,8 @@ module AuthHandler
 import Genie.Requests as Requests
 import Genie.Router as Router
 
+using ..AccountsDto
+using ..AuthDto
 using ..AuthUsecase
 using ScafGenie.Auth
 using ScafGenie.Exceptions
@@ -18,26 +20,34 @@ export signup,
     reset_password
 
 function signup()
-    request = Requests.jsonpayload()
     try
-        account = AuthUsecase.signup(request)
-        return json_success(Dict("account" => AuthUsecase.AccountModule.account_response(account)); status=201)
+        request = AuthDto.signup_request(Requests.jsonpayload())
+        input = AuthUsecase.SignupInput(
+            request.login_id,
+            request.email,
+            request.password,
+            request.first_name,
+            request.last_name,
+        )
+        account = AuthUsecase.signup(input)
+        return json_success(AuthDto.signup_response(AccountsDto.account_response(account)); status=201)
     catch e
         return json_fail(handle_exception(e))
     end
 end
 
 function login()
-    request = Requests.jsonpayload()
     try
-        account, access_token, refresh_token, refresh_token_max_age = AuthUsecase.login(request)
+        request = AuthDto.login_request(Requests.jsonpayload())
+        result = AuthUsecase.login(AuthUsecase.LoginInput(
+            request.login_id,
+            request.password,
+            request.remember_me,
+        ))
         return json_success(
-            Dict(
-                "account" => AuthUsecase.AccountModule.account_response(account),
-                "access_token" => access_token,
-            );
+            AuthDto.login_response(AccountsDto.account_response(result.account), result.access_token);
             status=200,
-            headers=Dict("Set-Cookie" => refresh_token_cookie_header(refresh_token, options="Max-Age=$refresh_token_max_age")),
+            headers=Dict("Set-Cookie" => refresh_token_cookie_header(result.refresh_token, options="Max-Age=$(result.refresh_token_max_age)")),
         )
     catch e
         return json_fail(handle_exception(e))
@@ -46,8 +56,8 @@ end
 
 function refresh()
     try
-        access_token = AuthUsecase.refresh(refreshable())
-        return json_success(Dict("access_token" => access_token); status=200)
+        result = AuthUsecase.refresh(refreshable())
+        return json_success(AuthDto.refresh_response(result.access_token); status=200)
     catch e
         return json_fail(handle_exception(e))
     end
@@ -62,9 +72,13 @@ function logout()
 end
 
 function update_password(account_id::Int, target_account_id::String)
-    request = Requests.jsonpayload()
     try
-        AuthUsecase.update_password(account_id, target_account_id, request)
+        request = AuthDto.update_password_request(Requests.jsonpayload())
+        AuthUsecase.update_password(
+            account_id,
+            target_account_id,
+            AuthUsecase.UpdatePasswordInput(request.old_password, request.new_password),
+        )
         return json_no_content()
     catch e
         return json_fail(handle_exception(e))
@@ -72,9 +86,9 @@ function update_password(account_id::Int, target_account_id::String)
 end
 
 function forgot_password()
-    request = Requests.jsonpayload()
     try
-        AuthUsecase.forgot_password(request)
+        request = AuthDto.forgot_password_request(Requests.jsonpayload())
+        AuthUsecase.forgot_password(AuthUsecase.ForgotPasswordInput(request.email))
         return json_no_content()
     catch e
         return json_fail(handle_exception(e))
@@ -82,9 +96,9 @@ function forgot_password()
 end
 
 function verify_reset_password_token()
-    request = Dict("token" => Router.params(:token, ""))
     try
-        AuthUsecase.verify_reset_password_token(request)
+        request = AuthDto.verify_reset_password_token_request(Dict("token" => Router.params(:token, "")))
+        AuthUsecase.verify_reset_password_token(AuthUsecase.VerifyResetPasswordTokenInput(request.token))
         return json_no_content()
     catch e
         return json_fail(handle_exception(e))
@@ -92,9 +106,9 @@ function verify_reset_password_token()
 end
 
 function reset_password()
-    request = Requests.jsonpayload()
     try
-        AuthUsecase.reset_password(request)
+        request = AuthDto.reset_password_request(Requests.jsonpayload())
+        AuthUsecase.reset_password(AuthUsecase.ResetPasswordInput(request.token, request.new_password))
         return json_no_content()
     catch e
         return json_fail(handle_exception(e))

@@ -3,6 +3,8 @@ using Genie.Renderer
 
 include("app/usecase/auth/usecase.jl")
 include("app/usecase/accounts/usecase.jl")
+include("app/handler/dto/auth.jl")
+include("app/handler/dto/accounts.jl")
 include("app/handler/auth.jl")
 include("app/handler/accounts.jl")
 

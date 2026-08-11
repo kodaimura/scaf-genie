@@ -1,4 +1,8 @@
-function refresh(payload)::String
+struct RefreshResult
+    access_token::String
+end
+
+function refresh(payload)::RefreshResult
     isnothing(payload) && throw(UnauthorizedError("REFRESH_INVALID"))
     (!haskey(payload, "sub") || !haskey(payload, "token_version")) && throw(UnauthorizedError("AUTH_INVALID_PAYLOAD"))
 
@@ -14,8 +18,9 @@ function refresh(payload)::String
         throw(UnauthorizedError("AUTH_TOKEN_REVOKED"))
     end
 
-    return Jwt.create_access_token(Dict{String,Any}(
+    access_token = Jwt.create_access_token(Dict{String,Any}(
         "sub" => string(account.id.value),
         "token_version" => account.token_version,
     ))
+    return RefreshResult(access_token)
 end

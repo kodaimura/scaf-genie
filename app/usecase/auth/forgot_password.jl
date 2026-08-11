@@ -1,7 +1,9 @@
-function forgot_password(input::Dict)::Nothing
-    UsecaseValidation.validate_forgot_password(input)
+struct ForgotPasswordInput
+    email::String
+end
 
-    email = strip(string(input["email"]))
+function forgot_password(input::ForgotPasswordInput)::Nothing
+    email = strip(input.email)
     account = AccountModule.get_by_email(email)
     if isnothing(account) || !isnothing(account.disabled_at)
         return nothing
