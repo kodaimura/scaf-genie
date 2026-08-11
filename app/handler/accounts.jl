@@ -2,18 +2,10 @@ module AccountsHandler
 
 import Genie.Requests as Requests
 
-using ..AccountsDto
-using ..AccountsUsecase
+import ..AccountsDto
+import ..AccountsUsecase
 using ScafGenie.Exceptions
 using ScafGenie.Responses
-
-export list,
-    create,
-    get_current,
-    get,
-    update,
-    disable,
-    enable
 
 function list()
     try

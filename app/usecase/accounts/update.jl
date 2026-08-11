@@ -8,7 +8,7 @@ end
 
 function update(account_id::Int, input::UpdateAccountInput)::Account
     account = get(account_id)
-    login_id = resolve_login_id(input.login_id, input.email)
+    login_id = UsecaseHelper.resolve_login_id(input.login_id, input.email)
     ensure_unique_login_id(login_id, account.id.value)
     ensure_unique_email(input.email, account.id.value)
 
@@ -17,7 +17,7 @@ function update(account_id::Int, input::UpdateAccountInput)::Account
     account.first_name = input.first_name
     account.last_name = input.last_name
     if !isnothing(input.password) && !isempty(input.password)
-        account.password_hash = UsecaseHelper.hash_password(input.password)
+        account.password_hash = hash_password(input.password)
         account.token_version += 1
     end
 

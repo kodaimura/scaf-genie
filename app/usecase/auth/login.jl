@@ -13,7 +13,7 @@ end
 
 function login(input::LoginInput)::LoginResult
     account = AccountModule.get_by_login_id(input.login_id)
-    if isnothing(account) || !UsecaseHelper.verify_password(input.password, account.password_hash)
+    if isnothing(account) || !verify_password(input.password, account.password_hash)
         throw(UnauthorizedError("INVALID_CREDENTIALS"))
     end
     if !isnothing(account.disabled_at)

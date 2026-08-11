@@ -18,11 +18,11 @@ function forgot_password(input::ForgotPasswordInput)::Nothing
 
     PasswordResetTokenModule.invalidate_active_tokens(account.id.value)
 
-    raw_token = UsecaseHelper.generate_token()
+    raw_token = generate_token()
     expires_minutes = parse(Int, Base.get(ENV, "PASSWORD_RESET_TOKEN_EXPIRES_MINUTES", "30"))
     PasswordResetTokenModule.create(PasswordResetToken(
         account_id = account.id.value,
-        token_hash = UsecaseHelper.hash_token(raw_token),
+        token_hash = hash_token(raw_token),
         expires_at = timestamp + Dates.Minute(expires_minutes),
         created_at = timestamp,
         updated_at = timestamp,

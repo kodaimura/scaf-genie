@@ -2,14 +2,6 @@ module AccountsDto
 
 using ScafGenie.Validations
 
-export AccountRequest,
-    UpdateAccountRequest,
-    account_request,
-    update_account_request,
-    account_response,
-    accounts_response,
-    account_payload
-
 struct AccountRequest
     login_id::Union{Nothing,String}
     email::Union{Nothing,String}

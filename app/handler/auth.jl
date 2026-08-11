@@ -1,23 +1,14 @@
 module AuthHandler
 
-import Genie.Requests as Requests
 import Genie.Router as Router
+import Genie.Requests as Requests
 
-using ..AccountsDto
-using ..AuthDto
-using ..AuthUsecase
+import ..AccountsDto
+import ..AuthDto
+import ..AuthUsecase
 using ScafGenie.Auth
 using ScafGenie.Exceptions
 using ScafGenie.Responses
-
-export signup,
-    login,
-    refresh,
-    logout,
-    update_password,
-    forgot_password,
-    verify_reset_password_token,
-    reset_password
 
 function signup()
     try

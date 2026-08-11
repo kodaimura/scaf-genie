@@ -12,9 +12,9 @@ using ScafGenie.Auth
 using ScafGenie.Exceptions
 using ScafGenie.Responses
 
-using .AuthUsecase
-using .AuthHandler
-using .AccountsHandler
+import .AuthUsecase
+import .AuthHandler
+import .AccountsHandler
 
 frontend_origins = split(Base.get(ENV, "FRONTEND_ORIGINS", "http://localhost:3000,http://localhost:5173"), ",")
 Genie.config.cors_headers["Access-Control-Allow-Origin"] = strip(first(frontend_origins))
