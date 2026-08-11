@@ -5,11 +5,15 @@ import Genie.Cookies as Cookies
 import Genie.Response
 
 using ..Jwt
+using ..Config
+using ..Errors
 
 export authenticated, 
     is_authenticated, 
     refreshable,
     is_refreshable,
+    required_access_payload,
+    required_refresh_payload,
     refresh_token_cookie_header,
     delete_refresh_token_cookie_header
 
@@ -48,6 +52,24 @@ function refreshable()::Union{Dict{String,Any},Nothing}
     end
 end
 
+function required_access_payload()::Dict{String,Any}
+    token = get_bearer_token()
+    isnothing(token) && throw(UnauthorizedError("AUTH_MISSING"))
+    payload = Jwt.verify_access_token(token)
+    isnothing(payload) && throw(UnauthorizedError("AUTH_INVALID"))
+    Base.get(payload, "type", "") == "access" || throw(UnauthorizedError("AUTH_INVALID_TYPE"))
+    return payload
+end
+
+function required_refresh_payload()::Dict{String,Any}
+    token = get_cookie("refresh_token")
+    isnothing(token) && throw(UnauthorizedError("REFRESH_MISSING"))
+    payload = Jwt.verify_refresh_token(token)
+    isnothing(payload) && throw(UnauthorizedError("REFRESH_INVALID"))
+    Base.get(payload, "type", "") == "refresh" || throw(UnauthorizedError("REFRESH_INVALID_TYPE"))
+    return payload
+end
+
 # Returns true if the user is refreshable, false otherwise.
 function is_refreshable()::Bool
     return !isnothing(refreshable())
@@ -60,7 +82,7 @@ function refresh_token_cookie_header(refresh_token::String; options::String = ""
         "HttpOnly",
         "SameSite=Lax",
     ]
-    if Base.get(ENV, "APP_ENV", "dev") == "production"
+    if Config.app_env() == "production"
         push!(parts, "Secure")
     end
     if !isempty(strip(options))

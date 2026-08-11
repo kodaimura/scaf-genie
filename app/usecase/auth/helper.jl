@@ -27,7 +27,7 @@ function get_reset_token(input::String)::String
 end
 
 function build_reset_url(token::String)::String
-    base_url = Base.get(ENV, "PASSWORD_RESET_URL_BASE", "http://localhost:3000/reset-password")
+    base_url = Config.password_reset_url_base()
     separator = occursin("?", base_url) ? "&" : "?"
     return "$(base_url)$(separator)token=$(HTTP.URIs.escapeuri(token))"
 end

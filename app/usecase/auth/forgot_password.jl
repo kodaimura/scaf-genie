@@ -11,7 +11,7 @@ function forgot_password(input::ForgotPasswordInput)::Nothing
 
     timestamp = Dates.now()
     latest = PasswordResetTokenModule.find_latest_by_account_id(account.id.value)
-    resend_minutes = parse(Int, Base.get(ENV, "PASSWORD_RESET_RESEND_INTERVAL_MINUTES", "5"))
+    resend_minutes = Config.password_reset_resend_interval_minutes()
     if !isnothing(latest) && latest.created_at > timestamp - Dates.Minute(resend_minutes)
         return nothing
     end
@@ -19,7 +19,7 @@ function forgot_password(input::ForgotPasswordInput)::Nothing
     PasswordResetTokenModule.invalidate_active_tokens(account.id.value)
 
     raw_token = generate_token()
-    expires_minutes = parse(Int, Base.get(ENV, "PASSWORD_RESET_TOKEN_EXPIRES_MINUTES", "30"))
+    expires_minutes = Config.password_reset_token_expires_minutes()
     PasswordResetTokenModule.create(PasswordResetToken(
         account_id = account.id.value,
         token_hash = hash_token(raw_token),

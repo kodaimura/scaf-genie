@@ -3,10 +3,11 @@ ENV ?= dev
 DOCKER_COMPOSE_FILE := $(if $(filter prod,$(ENV)),-f docker-compose.prod.yml,-f docker-compose.yml)
 DOCKER_COMPOSE_CMD := $(DOCKER_COMPOSE) $(DOCKER_COMPOSE_FILE)
 API_SERVICE := api
+MIGRATE_SERVICE := migrate
 
 .DEFAULT_GOAL := help
 
-.PHONY: up build build_no_cache down down_volumes stop exec shell logs ps reup check smoke routes migrate help
+.PHONY: up build build_no_cache down down_volumes stop exec shell logs ps reup check smoke routes migrate current history help
 
 ## -----------------------------
 ## Base Commands
@@ -61,10 +62,16 @@ smoke:
 	exit 1
 
 routes:
-	$(DOCKER_COMPOSE_CMD) run --rm $(API_SERVICE) julia --project=. -e 'using Pkg; Pkg.instantiate(); using Genie; Genie.loadapp(); println("GET /health"); println("POST /api/auth/signup"); println("POST /api/auth/login"); println("POST /api/auth/refresh"); println("POST /api/auth/logout"); println("POST /api/auth/forgot-password"); println("GET /api/auth/reset-password/verify"); println("POST /api/auth/reset-password"); println("GET /api/accounts"); println("POST /api/accounts"); println("GET /api/accounts/me"); println("PUT /api/accounts/me/password"); println("PUT /api/accounts/:target_account_id/disable"); println("PUT /api/accounts/:target_account_id/enable"); println("GET /api/accounts/:target_account_id"); println("PUT /api/accounts/:target_account_id")'
+	$(DOCKER_COMPOSE_CMD) run --rm $(API_SERVICE) julia --project=. -e 'using Pkg; Pkg.instantiate(); using Genie; Genie.loadapp(); println("GET /health"); println("POST /api/auth/signup"); println("POST /api/auth/login"); println("POST /api/auth/refresh"); println("POST /api/auth/logout"); println("POST /api/auth/forgot-password"); println("GET /api/auth/reset-password/verify"); println("POST /api/auth/reset-password"); println("GET /api/accounts"); println("POST /api/accounts"); println("GET /api/accounts/me"); println("PUT /api/accounts/me/password"); println("PUT /api/accounts/:target_account_id::Int/disable"); println("PUT /api/accounts/:target_account_id::Int/enable"); println("GET /api/accounts/:target_account_id::Int"); println("PUT /api/accounts/:target_account_id::Int")'
 
 migrate:
-	$(DOCKER_COMPOSE_CMD) run --rm $(API_SERVICE) julia --project=. -e 'using Pkg; Pkg.instantiate(); using SearchLight, SearchLightPostgreSQL; SearchLight.Configuration.load(); SearchLight.connect(); SearchLight.query("CREATE TABLE IF NOT EXISTS schema_migrations (version varchar(30))"); SearchLight.Migration.up()'
+	$(DOCKER_COMPOSE_CMD) run --rm $(MIGRATE_SERVICE)
+
+current:
+	$(DOCKER_COMPOSE_CMD) run --rm $(MIGRATE_SERVICE) julia --project=. -e 'using Pkg; Pkg.instantiate(); using Genie; Genie.loadapp(); using SearchLight; SearchLight.Migration.status()'
+
+history:
+	$(DOCKER_COMPOSE_CMD) run --rm $(MIGRATE_SERVICE) julia --project=. -e 'using Pkg; Pkg.instantiate(); using Genie; Genie.loadapp(); using SearchLight; SearchLight.Migration.status()'
 
 ## -----------------------------
 ## Help
@@ -90,3 +97,5 @@ help:
 	@echo "  smoke           Call /health from the running api container"
 	@echo "  routes          Print route paths"
 	@echo "  migrate         Run database migrations"
+	@echo "  current         Show migration status"
+	@echo "  history         Show migration status"

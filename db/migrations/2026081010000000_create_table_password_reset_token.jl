@@ -5,13 +5,13 @@ import SearchLight
 function up()
     SearchLight.query("""
     CREATE TABLE IF NOT EXISTS password_reset_token (
-        id SERIAL PRIMARY KEY,
-        account_id INTEGER NOT NULL REFERENCES accounts(id),
+        id BIGSERIAL PRIMARY KEY,
+        account_id BIGINT NOT NULL REFERENCES account(id),
         token_hash TEXT NOT NULL UNIQUE,
-        expires_at TIMESTAMP NOT NULL,
-        used_at TIMESTAMP,
-        created_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL
+        expires_at TIMESTAMPTZ NOT NULL,
+        used_at TIMESTAMPTZ NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
     """)
     SearchLight.query("""

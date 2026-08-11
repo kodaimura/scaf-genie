@@ -1,3 +1,5 @@
-import Genie
+import Logging
 
-Genie.Logger.initialize_logging()
+using ScafGenie.Logger
+
+Logging.global_logger(JSONLogger())

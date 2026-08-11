@@ -1,3 +1,7 @@
 FROM julia:1.11
 
 WORKDIR /app
+
+ENV TZ=UTC
+
+EXPOSE 8000

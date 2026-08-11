@@ -47,7 +47,7 @@ end
 
 function refresh()
     try
-        result = AuthUsecase.refresh(refreshable())
+        result = AuthUsecase.refresh(required_refresh_payload())
         return json_success(AuthDto.refresh_response(result.access_token); status=200)
     catch e
         return json_fail(handle_exception(e))

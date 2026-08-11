@@ -2,11 +2,11 @@ env: ENV["GENIE_ENV"]
 
 dev:
   adapter: PostgreSQL
-  database: project_db
-  host: db
-  username: postgres
-  password: postgres
-  port: 5432
+  database:
+  host:
+  username:
+  password:
+  port:
   config:
 
 prod:
@@ -20,9 +20,9 @@ prod:
 
 test:
   adapter: PostgreSQL
-  database: project_db
-  host: db
-  username: postgres
-  password: postgres
-  port: 5432
+  database:
+  host:
+  username:
+  password:
+  port:
   config:

@@ -21,17 +21,25 @@ function validate_require(request::Dict, field::String)
 end
 
 function validate_min_length(request::Dict, field::String, min::Int)
-    value = string(Base.get(request, field, ""))
+    raw = Base.get(request, field, nothing)
+    isnothing(raw) && return []
+    value = string(raw)
+    isempty(value) && return []
     length(value) < min ? [(field => "must be at least $min characters")] : []
 end
 
 function validate_max_length(request::Dict, field::String, max::Int)
-    value = string(Base.get(request, field, ""))
+    raw = Base.get(request, field, nothing)
+    isnothing(raw) && return []
+    value = string(raw)
+    isempty(value) && return []
     length(value) > max ? [(field => "must be at most $max characters")] : []
 end
 
 function validate_email_format(request::Dict, field::String)
-    value = string(Base.get(request, field, ""))
+    raw = Base.get(request, field, nothing)
+    isnothing(raw) && return []
+    value = string(raw)
     isempty(value) && return []
     pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
     !occursin(pattern, value) ? [(field => "must be a valid email")] : []

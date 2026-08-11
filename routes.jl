@@ -17,8 +17,8 @@ import .AuthUsecase
 import .AuthHandler
 import .AccountsHandler
 
-frontend_origins = split(Base.get(ENV, "FRONTEND_ORIGINS", "http://localhost:3000,http://localhost:5173"), ",")
-Genie.config.cors_headers["Access-Control-Allow-Origin"] = strip(first(frontend_origins))
+frontend_origins = ScafGenie.Config.frontend_origins()
+Genie.config.cors_headers["Access-Control-Allow-Origin"] = first(frontend_origins)
 Genie.config.cors_headers["Access-Control-Allow-Credentials"] = "true"
 Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
 Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
@@ -79,25 +79,25 @@ route("/api/accounts/me/password", method="PUT") do
     end
 end
 
-route("/api/accounts/:target_account_id/disable", method="PUT") do
+route("/api/accounts/:target_account_id::Int#\\d+/disable", method="PUT") do
     with_api_auth() do account_id
         return AccountsHandler.disable(parse_account_id_param())
     end
 end
 
-route("/api/accounts/:target_account_id/enable", method="PUT") do
+route("/api/accounts/:target_account_id::Int#\\d+/enable", method="PUT") do
     with_api_auth() do account_id
         return AccountsHandler.enable(parse_account_id_param())
     end
 end
 
-route("/api/accounts/:target_account_id", method="GET") do
+route("/api/accounts/:target_account_id::Int#\\d+", method="GET") do
     with_api_auth() do account_id
         return AccountsHandler.get(parse_account_id_param())
     end
 end
 
-route("/api/accounts/:target_account_id", method="PUT") do
+route("/api/accounts/:target_account_id::Int#\\d+", method="PUT") do
     with_api_auth() do account_id
         return AccountsHandler.update(parse_account_id_param())
     end
@@ -107,7 +107,7 @@ end
 
 function with_api_auth(f::Function)
     try
-        account_id = AuthUsecase.validate_access_token_account(authenticated())
+        account_id = AuthUsecase.validate_access_token_account(required_access_payload())
         return f(account_id)
     catch e
         return json_fail(handle_exception(e))

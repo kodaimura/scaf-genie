@@ -1,8 +1,11 @@
 module Mailer
 
 import Sockets
+import Base64
+import MbedTLS
 
 using ..Errors
+using ..Config
 
 export send_mail
 
@@ -12,35 +15,35 @@ function send_mail(; to, subject, body)::Nothing
     body = string(body)
     isempty(strip(to)) && return nothing
 
-    provider = lowercase(strip(Base.get(ENV, "MAIL_PROVIDER", "mailhog")))
+    provider = Config.mail_provider()
     if provider == "mailhog"
         send_smtp(
             host = "mailhog",
             port = 1025,
-            from = Base.get(ENV, "MAIL_FROM", "no-reply@example.local"),
+            from = Config.mail_from(),
             to = to,
             subject = subject,
             body = body,
+            use_tls = false,
+            username = "",
+            password = "",
         )
         return nothing
     end
 
     if provider == "smtp"
-        use_tls = lowercase(strip(Base.get(ENV, "SMTP_USE_TLS", "false"))) == "true"
-        if use_tls || !isempty(strip(Base.get(ENV, "SMTP_USERNAME", ""))) || !isempty(strip(Base.get(ENV, "SMTP_PASSWORD", "")))
-            throw(ServiceUnavailableError("SMTP_TLS_OR_AUTH_UNSUPPORTED"))
-        end
-
-        host = strip(Base.get(ENV, "SMTP_HOST", ""))
+        host = Config.smtp_host()
         isempty(host) && throw(ServiceUnavailableError("SMTP_HOST_REQUIRED"))
-        port = parse(Int, Base.get(ENV, "SMTP_PORT", "25"))
         send_smtp(
             host = host,
-            port = port,
-            from = Base.get(ENV, "MAIL_FROM", "no-reply@example.local"),
+            port = Config.smtp_port(),
+            from = Config.mail_from(),
             to = to,
             subject = subject,
             body = body,
+            use_tls = Config.smtp_use_tls(),
+            username = Config.smtp_username(),
+            password = Config.smtp_password(),
         )
         return nothing
     end
@@ -48,22 +51,37 @@ function send_mail(; to, subject, body)::Nothing
     throw(ServiceUnavailableError("MAIL_PROVIDER_UNSUPPORTED"))
 end
 
-function send_smtp(; host, port::Int, from, to, subject, body)::Nothing
+function send_smtp(; host, port::Int, from, to, subject, body, use_tls::Bool, username::String, password::String)::Nothing
     host = string(host)
     from = string(from)
     to = string(to)
     subject = string(subject)
     body = string(body)
     socket = Sockets.connect(host, port)
+    io = socket
     try
-        read_response(socket)
-        send_command(socket, "HELO localhost")
-        send_command(socket, "MAIL FROM:<$from>")
-        send_command(socket, "RCPT TO:<$to>")
-        send_command(socket, "DATA")
-        write(socket, compose_message(from, to, subject, body))
-        read_response(socket)
-        send_command(socket, "QUIT")
+        read_response(io)
+        send_command(io, "EHLO localhost")
+        if use_tls
+            send_command(io, "STARTTLS")
+            tls = MbedTLS.SSLContext()
+            MbedTLS.setup!(tls, MbedTLS.SSLConfig(true))
+            MbedTLS.associate!(tls, socket)
+            MbedTLS.handshake!(tls)
+            io = tls
+            send_command(io, "EHLO localhost")
+        end
+        if !isempty(username) || !isempty(password)
+            isempty(username) && throw(ServiceUnavailableError("SMTP_USERNAME_REQUIRED"))
+            isempty(password) && throw(ServiceUnavailableError("SMTP_PASSWORD_REQUIRED"))
+            send_command(io, "AUTH PLAIN $(smtp_plain_auth(username, password))")
+        end
+        send_command(io, "MAIL FROM:<$from>")
+        send_command(io, "RCPT TO:<$to>")
+        send_command(io, "DATA")
+        write(io, compose_message(from, to, subject, body))
+        read_response(io)
+        send_command(io, "QUIT")
     finally
         close(socket)
     end
@@ -76,11 +94,19 @@ function send_command(socket, command::String)
 end
 
 function read_response(socket)::String
-    line = readline(socket)
+    lines = String[]
+    while true
+        line = readline(socket)
+        push!(lines, line)
+        if length(line) < 4 || line[4] != '-'
+            break
+        end
+    end
+    line = last(lines)
     if isempty(line) || !(startswith(line, "2") || startswith(line, "3"))
         throw(ServiceUnavailableError("MAIL_SEND_FAILED"))
     end
-    return line
+    return join(lines, "\n")
 end
 
 function compose_message(from::String, to::String, subject::String, body::String)::String
@@ -100,6 +126,10 @@ end
 
 function escape_smtp_body(body::String)::String
     return replace(body, r"(?m)^\." => "..")
+end
+
+function smtp_plain_auth(username::String, password::String)::String
+    return Base64.base64encode("\0$username\0$password")
 end
 
 end

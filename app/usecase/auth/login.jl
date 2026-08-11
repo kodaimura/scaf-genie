@@ -25,9 +25,9 @@ function login(input::LoginInput)::LoginResult
         "token_version" => account.token_version,
     )
     access_token = Jwt.create_access_token(copy(payload))
-    refresh_token = Jwt.create_refresh_token(copy(payload))
+    refresh_token = Jwt.create_refresh_token(copy(payload); remember_me=input.remember_me)
     refresh_token_max_age = input.remember_me ?
-        parse(Int, Base.get(ENV, "REFRESH_TOKEN_REMEMBER_ME_EXPIRES_SECONDS", "2592000")) :
-        parse(Int, Base.get(ENV, "REFRESH_TOKEN_EXPIRES_SECONDS", "43200"))
+        Config.refresh_token_remember_me_expires_seconds() :
+        Config.refresh_token_expires_seconds()
     return LoginResult(account, access_token, refresh_token, refresh_token_max_age)
 end

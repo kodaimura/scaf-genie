@@ -4,7 +4,7 @@ end
 
 function refresh(payload)::RefreshResult
     isnothing(payload) && throw(UnauthorizedError("REFRESH_INVALID"))
-    (!haskey(payload, "sub") || !haskey(payload, "token_version")) && throw(UnauthorizedError("AUTH_INVALID_PAYLOAD"))
+    (!haskey(payload, "sub") || !haskey(payload, "token_version")) && throw(UnauthorizedError("REFRESH_INVALID_PAYLOAD"))
 
     account_id = try
         parse(Int, string(payload["sub"]))

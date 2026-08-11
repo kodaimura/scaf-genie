@@ -3,6 +3,7 @@ module AccountModel
 import Dates: DateTime, now
 import SearchLight: AbstractModel, DbId
 import SearchLight
+import TimeZones: ZonedDateTime
 import Base: @kwdef
 
 export Account, account_response
@@ -21,6 +22,8 @@ export Account, account_response
     updated_at::DateTime = now()
 end
 
+SearchLight.table(::Type{Account}) = "account"
+
 function SearchLight.Callbacks.on_find(account::Account, field::Symbol, value::String)
     setfield!(account, field, value)
     return account
@@ -28,6 +31,11 @@ end
 
 function SearchLight.Callbacks.on_find(account::Account, field::Symbol, value::DateTime)
     setfield!(account, field, value)
+    return account
+end
+
+function SearchLight.Callbacks.on_find(account::Account, field::Symbol, value::ZonedDateTime)
+    setfield!(account, field, DateTime(value))
     return account
 end
 

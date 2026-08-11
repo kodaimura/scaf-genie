@@ -1,9 +1,10 @@
 module UsecaseHelper
 
 using ScafGenie.Errors
+using ScafGenie.Config
 
 function resolve_login_id(login_id, email)::String
-    mode = lowercase(strip(Base.get(ENV, "AUTH_LOGIN_ID_MODE", "email")))
+    mode = Config.auth_login_id_mode()
 
     if mode == "email"
         if isnothing(email) || isempty(strip(string(email)))

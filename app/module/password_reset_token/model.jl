@@ -3,6 +3,7 @@ module PasswordResetTokenModel
 import Dates: DateTime, now
 import SearchLight: AbstractModel, DbId
 import SearchLight
+import TimeZones: ZonedDateTime
 import Base: @kwdef
 
 export PasswordResetToken
@@ -26,6 +27,11 @@ end
 
 function SearchLight.Callbacks.on_find(token::PasswordResetToken, field::Symbol, value::DateTime)
     setfield!(token, field, value)
+    return token
+end
+
+function SearchLight.Callbacks.on_find(token::PasswordResetToken, field::Symbol, value::ZonedDateTime)
+    setfield!(token, field, DateTime(value))
     return token
 end
 

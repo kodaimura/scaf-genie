@@ -10,6 +10,7 @@ using .UsecaseHelper
 import Dates
 import HTTP
 using ScafGenie.Errors
+using ScafGenie.Config
 using ScafGenie.Crypto
 using ScafGenie.Jwt
 using ScafGenie.Mailer

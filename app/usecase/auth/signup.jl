@@ -7,7 +7,7 @@ struct SignupInput
 end
 
 function signup(input::SignupInput)::Account
-    Base.get(ENV, "ENABLE_SIGNUP", "true") == "true" || throw(ForbiddenError("FORBIDDEN"))
+    Config.enable_signup() || throw(ForbiddenError("FORBIDDEN"))
 
     login_id = UsecaseHelper.resolve_login_id(input.login_id, input.email)
     ensure_unique_login_id(login_id)
