@@ -2,13 +2,14 @@ DOCKER_COMPOSE := docker compose
 ENV ?= dev
 DOCKER_COMPOSE_FILE := $(if $(filter prod,$(ENV)),-f docker-compose.prod.yml,-f docker-compose.yml)
 DOCKER_COMPOSE_CMD := $(DOCKER_COMPOSE) $(DOCKER_COMPOSE_FILE)
+E2E_COMPOSE_CMD := $(DOCKER_COMPOSE) -p scaf-genie-e2e -f docker-compose.yml -f docker-compose.test.yml
 DOCKER_COMPOSE_RUN := $(DOCKER_COMPOSE_CMD) run --rm --build
 API_SERVICE := api
 MIGRATE_SERVICE := migrate
 
 .DEFAULT_GOAL := help
 
-.PHONY: up build build_no_cache down down_volumes stop exec shell logs ps reup check test smoke routes migrate current history versions help
+.PHONY: up build build_no_cache down down_volumes stop exec shell logs ps reup check test test_e2e smoke routes migrate current history versions help
 
 ## -----------------------------
 ## Base Commands
@@ -53,6 +54,14 @@ check: test
 
 test:
 	$(DOCKER_COMPOSE_RUN) $(API_SERVICE) julia --project=test test/runtests.jl
+
+test_e2e:
+	@set -eu; \
+	cleanup() { $(E2E_COMPOSE_CMD) down -v --remove-orphans >/dev/null 2>&1 || true; }; \
+	trap cleanup EXIT INT TERM; \
+	cleanup; \
+	$(E2E_COMPOSE_CMD) --profile tools run --rm --build $(MIGRATE_SERVICE); \
+	$(E2E_COMPOSE_CMD) --profile test run --rm --build api-test
 
 smoke:
 	@for i in $$(seq 1 30); do \
@@ -101,6 +110,7 @@ help:
 	@echo "  reup            Restart environment (down + up)"
 	@echo "  check           Load the Genie app and run tests"
 	@echo "  test            Run tests inside the api container"
+	@echo "  test_e2e        Run the full HTTP API contract in isolation"
 	@echo "  smoke           Call /health from the running api container"
 	@echo "  routes          Print route paths"
 	@echo "  migrate         Run database migrations"
