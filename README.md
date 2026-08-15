@@ -1,5 +1,11 @@
 # scaf-genie-api
 
+Rename template identifiers after cloning directly:
+
+```sh
+bin/scaf-init my-app
+```
+
 Genie backend scaffold.
 
 This template is intended to run through Docker. Local Julia and Node are not
