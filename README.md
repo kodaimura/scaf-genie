@@ -1,12 +1,24 @@
-# scaf-genie-api
-
-Rename template identifiers after cloning directly:
-
-```sh
-bin/scaf-init my-app
-```
+# scaf-genie
 
 Genie backend scaffold.
+
+## Create a project
+
+This scaffold supports direct cloning, GitHub's **Use this template**, and
+generation through webscaf.
+
+For a direct clone or a repository created from the GitHub template, clone it
+using the intended project directory and initialize it once:
+
+```sh
+git clone <repository-url> my-app
+cd my-app
+make init
+```
+
+`make init` uses the current directory name. Override it when needed with
+`make init PROJECT_NAME=another-name`. webscaf runs the same initialization
+automatically. Skip initialization only when developing this scaffold itself.
 
 This template is intended to run through Docker. Local Julia and Node are not
 required for normal development.
@@ -86,7 +98,7 @@ make up ENV=prod
 versions by default. Update it intentionally when upgrading dependencies.
 
 The development database is stored in the Docker named volume
-`scaf-genie-api_db_data`.
+`scaf-genie_db_data`.
 If PostgreSQL image versions are upgraded on an existing local volume and a
 collation warning appears, recreate the dev volume with `make down_volumes`
 before running `make migrate` again.
