@@ -1,3 +1,5 @@
+name: scaf-genie
+
 services:
   api:
     build:
