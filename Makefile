@@ -49,8 +49,7 @@ ps:
 
 reup: down up
 
-check:
-	$(DOCKER_COMPOSE_RUN) $(API_SERVICE) julia --project=. -e 'using Pkg; Pkg.instantiate(); using Genie; Genie.loadapp()'
+check: test
 
 test:
 	$(DOCKER_COMPOSE_RUN) $(API_SERVICE) julia --project=test test/runtests.jl
@@ -100,7 +99,7 @@ help:
 	@echo "  logs            Show api logs"
 	@echo "  ps              Show container status"
 	@echo "  reup            Restart environment (down + up)"
-	@echo "  check           Load Genie app inside the api container"
+	@echo "  check           Load the Genie app and run tests"
 	@echo "  test            Run tests inside the api container"
 	@echo "  smoke           Call /health from the running api container"
 	@echo "  routes          Print route paths"
