@@ -3,6 +3,7 @@ module ScafGenie
 using Genie
 
 include("../app/core/config.jl")
+include("../app/core/database.jl")
 include("../app/core/errors.jl")
 include("../app/core/logger.jl")
 include("../app/core/cors.jl")

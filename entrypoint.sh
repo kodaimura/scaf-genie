@@ -2,8 +2,6 @@
 set -e
 
 exec julia --project=. -e "
-using Pkg;
-Pkg.instantiate();
 using Genie;
 Genie.loadapp();
 up(host = \"0.0.0.0\", async = false);

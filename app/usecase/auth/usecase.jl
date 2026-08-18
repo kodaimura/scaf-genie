@@ -9,6 +9,7 @@ using .PasswordResetTokenModule
 using .UsecaseHelper
 import Dates
 import HTTP
+using ScafGenie.Database
 using ScafGenie.Errors
 using ScafGenie.Config
 using ScafGenie.Crypto

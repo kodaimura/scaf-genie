@@ -4,19 +4,19 @@ struct ResetPasswordInput
 end
 
 function reset_password(input::ResetPasswordInput)::Nothing
-    raw_token = input.token
-    reset_token = PasswordResetTokenModule.get_by_hash(hash_token(raw_token))
-    validate_reset_token(reset_token)
+    Database.transaction() do
+        token_hash = hash_token(input.token)
+        reset_token = PasswordResetTokenModule.get_by_hash(token_hash)
+        validate_reset_token(reset_token)
+        PasswordResetTokenModule.mark_used_if_unused(token_hash) ||
+            throw(BadRequestError("TOKEN_ALREADY_USED"))
 
-    account = AccountModule.get_by_id(reset_token.account_id)
-    isnothing(account) && throw(NotFoundError("ACCOUNT_NOT_FOUND"))
+        account = AccountModule.get_by_id(reset_token.account_id)
+        isnothing(account) && throw(NotFoundError("ACCOUNT_NOT_FOUND"))
 
-    timestamp = Dates.now()
-    account.password_hash = hash_password(input.new_password)
-    account.token_version += 1
-    AccountModule.update(account)
-
-    reset_token.used_at = timestamp
-    PasswordResetTokenModule.update(reset_token)
+        account.password_hash = hash_password(input.new_password)
+        account.token_version += 1
+        AccountModule.update(account)
+    end
     return nothing
 end

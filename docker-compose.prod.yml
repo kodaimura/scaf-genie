@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: production
       args:
         JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
     init: true
@@ -40,6 +41,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: production
       args:
         JULIA_VERSION: ${JULIA_VERSION:-1.12.6}
     init: true

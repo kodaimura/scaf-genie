@@ -10,7 +10,7 @@ MIGRATE_SERVICE := migrate
 
 .DEFAULT_GOAL := help
 
-.PHONY: init up build build_no_cache down down_volumes stop exec shell logs ps reup check test test_e2e smoke routes migrate current history versions help
+.PHONY: init up build build_no_cache build_prod down down_volumes stop exec shell logs ps reup check test test_e2e smoke routes migrate current history versions help
 
 ## -----------------------------
 ## Base Commands
@@ -30,6 +30,9 @@ build:
 build_no_cache:
 	@chmod +x ./entrypoint.sh
 	$(DOCKER_COMPOSE_CMD) build --no-cache
+
+build_prod:
+	docker build --target production --tag "$(PROJECT_NAME)-runtime" .
 
 down:
 	$(DOCKER_COMPOSE_CMD) down
@@ -105,6 +108,7 @@ help:
 	@echo "  up              Start containers (default: dev)"
 	@echo "  build           Build containers"
 	@echo "  build_no_cache  Build containers without cache"
+	@echo "  build_prod      Build the production API image"
 	@echo "  down            Stop and remove containers and networks"
 	@echo "  down_volumes    Stop and remove containers, networks, and volumes"
 	@echo "  stop            Stop containers"

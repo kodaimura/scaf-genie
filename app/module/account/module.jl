@@ -5,6 +5,7 @@ include("model.jl")
 import Dates: now
 import SearchLight
 using .AccountModel
+using ScafGenie.Database
 
 export Account,
     account_response,
@@ -21,18 +22,24 @@ const Account = AccountModel.Account
 const account_response = AccountModel.account_response
 
 function create(account::Account)::Account
-    SearchLight.save!(account)
+    Database.with_connection() do
+        SearchLight.save!(account)
+    end
     return account
 end
 
 function update(account::Account)::Account
     account.updated_at = now()
-    SearchLight.save!(account)
+    Database.with_connection() do
+        SearchLight.save!(account)
+    end
     return account
 end
 
 function get_all()::Vector{Account}
-    accounts = SearchLight.find(Account)
+    accounts = Database.with_connection() do
+        SearchLight.find(Account)
+    end
     return sort(
         filter(account -> isnothing(account.deleted_at), accounts),
         by = account -> account.id.value,
@@ -40,7 +47,9 @@ function get_all()::Vector{Account}
 end
 
 function get_by_id(account_id)::Union{Account,Nothing}
-    account = SearchLight.findone(Account, id=account_id)
+    account = Database.with_connection() do
+        SearchLight.findone(Account, id=account_id)
+    end
     if isnothing(account) || !isnothing(account.deleted_at)
         return nothing
     end
@@ -48,7 +57,9 @@ function get_by_id(account_id)::Union{Account,Nothing}
 end
 
 function get_by_email(email::AbstractString)::Union{Account,Nothing}
-    account = SearchLight.findone(Account, email=string(email))
+    account = Database.with_connection() do
+        SearchLight.findone(Account, email=string(email))
+    end
     if isnothing(account) || !isnothing(account.deleted_at)
         return nothing
     end
@@ -56,7 +67,9 @@ function get_by_email(email::AbstractString)::Union{Account,Nothing}
 end
 
 function get_by_login_id(login_id::AbstractString)::Union{Account,Nothing}
-    account = SearchLight.findone(Account, login_id=string(login_id))
+    account = Database.with_connection() do
+        SearchLight.findone(Account, login_id=string(login_id))
+    end
     if isnothing(account) || !isnothing(account.deleted_at)
         return nothing
     end
