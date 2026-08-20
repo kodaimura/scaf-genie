@@ -3,11 +3,8 @@
 ## Status and source
 
 This project adopts [HUMQ](https://github.com/kodaimura/humq) v1.1.0 and maps
-its responsibilities to Julia, Genie, and SearchLight. It was reviewed against
-upstream commit
-[`d3c9150`](https://github.com/kodaimura/humq/commit/d3c9150a2b824e6197fbc87230a1dc6940631313).
-This document is the local contract; upstream HUMQ changes apply only after an
-explicit review.
+its responsibilities to Julia, Genie, and SearchLight. This document is the
+local contract; upstream HUMQ changes apply only after an explicit review.
 
 ## Responsibility mapping
 
