@@ -1,3 +1,5 @@
 function disable(account_id::Int)::Account
-    return AccountModule.disable(get(account_id))
+    account = AccountModule.get_by_id(account_id)
+    isnothing(account) && throw(NotFoundError("ACCOUNT_NOT_FOUND"))
+    return AccountModule.disable(account)
 end

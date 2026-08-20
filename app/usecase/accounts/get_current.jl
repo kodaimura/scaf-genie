@@ -1,3 +1,5 @@
 function get_current(account_id::Int)::Account
-    return get(account_id)
+    account = AccountModule.get_by_id(account_id)
+    isnothing(account) && throw(NotFoundError("ACCOUNT_NOT_FOUND"))
+    return account
 end

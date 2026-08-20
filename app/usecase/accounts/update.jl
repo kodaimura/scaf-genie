@@ -7,7 +7,8 @@ struct UpdateAccountInput
 end
 
 function update(account_id::Int, input::UpdateAccountInput)::Account
-    account = get(account_id)
+    account = AccountModule.get_by_id(account_id)
+    isnothing(account) && throw(NotFoundError("ACCOUNT_NOT_FOUND"))
     login_id = UsecaseHelper.resolve_login_id(input.login_id, input.email)
     ensure_unique_login_id(login_id, account.id.value)
     ensure_unique_email(input.email, account.id.value)

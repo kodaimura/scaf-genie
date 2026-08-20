@@ -3,8 +3,11 @@
 ## Status and source
 
 This project adopts [HUMQ](https://github.com/kodaimura/humq) v1.1.0 and maps
-its responsibilities to Julia, Genie, and SearchLight. This document is the
-local contract; upstream HUMQ changes apply only after an explicit review.
+its responsibilities to Julia, Genie, and SearchLight. It was reviewed against
+upstream commit
+[`d3c9150`](https://github.com/kodaimura/humq/commit/d3c9150a2b824e6197fbc87230a1dc6940631313).
+This document is the local contract; upstream HUMQ changes apply only after an
+explicit review.
 
 ## Responsibility mapping
 
@@ -57,9 +60,13 @@ validation, authorization, branching, transaction boundaries, and external-I/O
 policy. Keep significant branches visible in that function.
 
 Avoid generic helper modules. A deterministic shared calculation may be an
-internal policy function that receives all inputs. Shared database-dependent
-behavior may become a narrowly named internal operation after it is reused with
-the same meaning and failure policy.
+internal policy function that receives all inputs. An exported Usecase function
+must not call another exported Usecase function as a reuse mechanism.
+
+Keep database-dependent behavior in each Usecase by default. Use a narrowly
+named internal operation only when multiple Usecases must preserve the same
+invariant and divergent validation, errors, locks, or update order would cause
+a concrete inconsistency. Similar code or a long Usecase is not sufficient.
 
 Usecase does not call SearchLight persistence functions directly. It may open a
 `Database.transaction` block and call Modules or Queries inside it.
@@ -86,6 +93,12 @@ database-specific concurrency control inside that same block. Password reset
 uses a conditional `UPDATE ... RETURNING` so only one request can consume an
 unused token. Database constraints are the final guard for representable
 invariants.
+
+HUMQ does not structurally guarantee multi-table consistency. A Usecase can
+omit a required Module call while following every dependency rule. Protect
+representable invariants with database constraints and test business branches
+and rollback behavior. Use a structurally protective design for a domain that
+cannot accept implementation-level enforcement.
 
 SearchLightPostgreSQL exposes one connection per application process.
 `ScafGenie.Database` serializes all access to that connection so asynchronous
@@ -114,4 +127,6 @@ production use.
   migration changes.
 
 Document and test any deliberate exception instead of silently mixing
-responsibilities.
+responsibilities. Treat increasing Operations or shared invariants that
+dominate a domain as a signal to consider an aggregate-centered or other
+domain-specific architecture for that domain.
